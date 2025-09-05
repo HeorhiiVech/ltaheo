@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Proximity Stats{% endblock %}
+
+{% block content %}
+    <style>
+        /* Стили для таблицы Proximity */
+        .proximity-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            margin-top: 1.5rem;
+        }
+
+        .proximity-table th,
+        .proximity-table td {
+            border: 1px solid var(--border-color);
+            padding: 7px 5px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .proximity-table thead th {
+            background-color: var(--bg-dark-tertiary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.8em;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        
+        .proximity-table .group-header {
+            border-bottom: 2px solid var(--accent-primary);
+        }
+
+        .proximity-table tbody tr:nth-child(odd) {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        .proximity-table tbody tr:hover {
+            background-color: var(--bg-dark-tertiary);
+        }
+
+        .proximity-table .champ-cell {
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            min-width: 140px;
+        }
+        .proximity-table .champ-cell img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .prox-value {
+            font-weight: 500;
+        }
+        .prox-low { color: var(--text-secondary); }
+        .prox-mid { color: var(--text-primary); }
+        .prox-high { color: #ffeb3b; font-weight: 600; }
+        .prox-very-high { color: #ff9800; font-weight: 700; }
+
+        .proximity-table tfoot tr {
+            background-color: var(--bg-dark-tertiary);
+            font-weight: bold;
+        }
+        .proximity-table tfoot td {
+            color: var(--text-headings);
+            font-size: 1.1em;
+        }
+    </style>
+
+    <div class="header-controls">
+        <h1>Proximity Statistics</h1>
+        <div class="controls">
+            <form method="get" class="filter-form" action="{{ url_for('proximity') }}">
+                <div class="filter-group">
+                    <label for="team_select">Team:</label>
+                    <select name="team" id="team_select" onchange="this.form.submit()">
+                        <option value="">-- Select Team --</option>
+                        {% for team_display_name in all_teams %}
+                            <option value="{{ team_display_name }}" {% if team_display_name == selected_team %}selected{% endif %}>
+                                {{ team_display_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="role_select">Role:</label>
+                    <select name="role" id="role_select" onchange="this.form.submit()">
+                        {% for role in proximity_roles %}
+                            <option value="{{ role }}" {% if role == selected_role %}selected{% endif %}>{{ role }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="games_filter_select">Last Games:</label>
+                    <select name="games_filter" id="games_filter_select" onchange="this.form.submit()">
+                        {% for gf in games_filters %}
+                            <option value="{{ gf }}" {% if gf == selected_games_filter %}selected{% endif %}>{{ gf }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <noscript><button type="submit" class="button">Apply</button></noscript>
+            </form>
+        </div>
+    </div>
+    <hr>
+
+    {% if stats.error %}
+        <p class="notice error-message">{{ stats.error }}</p>
+    {% elif stats.message %}
+        <p class="notice">{{ stats.message }}</p>
+    {% elif selected_team and stats.data_by_champion %}
+        <h2>Proximity for {{ selected_team }} - {{ selected_role }} (Last {{ selected_games_filter }} games)</h2>
+        <div class="table-responsive">
+            <table class="proximity-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Champion</th>
+                        <th rowspan="2">Games</th>
+                        <th rowspan="2">Winrate %</th>
+                        
+                        {# ИЗМЕНЕНИЕ: Заголовок для общей близости #}
+                        <th colspan="4" class="group-header">Proximity %</th>
+
+                        {% set time_intervals = ['0-5 min', '5-14 min', '14-20 min', '20-24 min', '24-30 min', '30+ min'] %}
+                        {% for interval in time_intervals %}
+                             <th colspan="4" class="group-header">{{ interval }}</th>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        {# Саб-заголовки для ролей #}
+                        {% for i in range(time_intervals|length + 1) %}
+                            {% if selected_role == 'JUNGLE' %}
+                                <th>TOP</th>
+                                <th>MID</th>
+                                <th>ADC</th>
+                                <th>SUP</th>
+                            {% elif selected_role == 'SUPPORT' %}
+                                <th>TOP</th>
+                                <th>JGL</th>
+                                <th>MID</th>
+                                <th>ADC</th>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for champ_data in stats.data_by_champion %}
+                        <tr>
+                            <td class="champ-cell">
+                                {{ get_champion_icon_html(champ_data.champion, champion_data) | safe }}
+                                <span>{{ champ_data.champion }}</span>
+                            </td>
+                            <td>{{ champ_data.games }}</td>
+                            <td class="{% if champ_data.winrate >= 55 %}wr-high{% elif champ_data.winrate <= 45 %}wr-low{% else %}wr-mid{% endif %}">
+                                {{ "%.0f"|format(champ_data.winrate) }}%
+                            </td>
+                            
+                            {# ИЗМЕНЕНИЕ: Отображаем Overall Proximity #}
+                            {% for role in champ_data.proximity.keys() %}
+                                {% set prox_val = champ_data.proximity[role]['Overall'] %}
+                                <td class="prox-value {% if prox_val >= 40 %}prox-very-high{% elif prox_val >= 30 %}prox-high{% elif prox_val >= 15 %}prox-mid{% else %}prox-low{% endif %}">
+                                    {{ prox_val }}%
+                                </td>
+                            {% endfor %}
+
+                             {# Proximity по времени #}
+                            {% for interval in time_intervals %}
+                                {% for role in champ_data.proximity.keys() %}
+                                    {% set prox_val = champ_data.proximity[role][interval] %}
+                                    <td class="prox-value {% if prox_val >= 40 %}prox-very-high{% elif prox_val >= 30 %}prox-high{% elif prox_val >= 15 %}prox-mid{% else %}prox-low{% endif %}">
+                                        {{ prox_val }}%
+                                    </td>
+                                {% endfor %}
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">Average</td>
+                        {# Средние значения #}
+                        {% for role in stats.averages.keys() %}
+                             <td class="prox-value {% if stats.averages[role]['Overall'] >= 40 %}prox-very-high{% elif stats.averages[role]['Overall'] >= 30 %}prox-high{% elif stats.averages[role]['Overall'] >= 15 %}prox-mid{% else %}prox-low{% endif %}">
+                                {{ stats.averages[role]['Overall'] }}%
+                            </td>
+                        {% endfor %}
+                        {% for interval in time_intervals %}
+                            {% for role in stats.averages.keys() %}
+                                <td class="prox-value {% if stats.averages[role][interval] >= 40 %}prox-very-high{% elif stats.averages[role][interval] >= 30 %}prox-high{% elif stats.averages[role][interval] >= 15 %}prox-mid{% else %}prox-low{% endif %}">
+                                    {{ stats.averages[role][interval] }}%
+                                </td>
+                            {% endfor %}
+                        {% endfor %}
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    {% else %}
+        <p class="notice">No proximity data found for the selected filters. Please select a team or try updating the tournament data.</p>
+    {% endif %}
+
+{% endblock %}

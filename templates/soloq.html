@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}SoloQ Statistics{% endblock %}
+
+{% block content %}
+    <div class="header-controls">
+        <h1>SoloQ Statistics</h1>
+        <div class="controls">
+            {# Кнопка обновления данных SoloQ #}
+            <form action="{{ url_for('update_soloq_route') }}" method="post" style="display: inline-block; margin-right: 20px;">
+                 {# Передаем текущие фильтры в action для сохранения при редиректе #}
+                 <input type="hidden" name="time_filter" value="{{ request.args.get('time_filter', 'All Time') }}">
+                 <input type="hidden" name="date_from" value="{{ request.args.get('date_from', '') }}">
+                 <input type="hidden" name="date_to" value="{{ request.args.get('date_to', '') }}">
+                <button type="submit" class="button button-update">Update SoloQ Data</button>
+            </form>
+
+            {# --- ФОРМА ФИЛЬТРАЦИИ (С ДАТАМИ И КНОПКОЙ) --- #}
+            <form method="get" class="filter-form soloq-filter-form" action="{{ url_for('soloq') }}">
+                {# Группировка для стилизации (опционально) #}
+                <div class="filter-group">
+                    <label for="time_filter">Period:</label>
+                    <select name="time_filter" id="time_filter">
+                        {# Убран onchange #}
+                        {% for filter_option in time_filters %}
+                            <option value="{{ filter_option }}" {% if request.args.get('time_filter', 'All Time') == filter_option %}selected{% endif %}>
+                                {{ filter_option }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date_from">From:</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ request.args.get('date_from', '') }}">
+                </div>
+                 <div class="filter-group">
+                    <label for="date_to">To:</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ request.args.get('date_to', '') }}">
+                 </div>
+                <button type="submit" class="button">Apply Filter</button> {# Кнопка применения #}
+            </form>
+             {# --- КОНЕЦ ФОРМЫ ФИЛЬТРАЦИИ --- #}
+        </div>
+    </div>
+
+    <hr>
+
+    {# Отображаем текущий активный фильтр #}
+    <h2>Player Statistics ({{ current_filter_label | default('All Time') }})</h2>
+    <p class="notice" style="font-size: 0.8em;">Showing stats for games played on player's main role.</p>
+
+    {% if players %}
+    <div class="player-stats-grid">
+        {% for player in players %}
+            <div class="player-column">
+                <h3>{{ player }}</h3>
+                {% set player_stats = player_stats_all.get(player, []) %}
+                {% if player_stats %}
+                    <div class="table-responsive">
+                        <table class="player-champ-table">
+                            <thead>
+                                <tr>
+                                    <th>Icon</th>
+                                    <th>Champion</th>
+                                    <th>Games</th>
+                                    <th>WR%</th>
+                                    <th>KDA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for stats_entry in player_stats %}
+                                 <tr>
+                                    <td>{{ stats_entry.icon_html | safe if stats_entry.icon_html else '' }}</td>
+                                    <td>{{ stats_entry.Champion }}</td>
+                                    <td>{{ stats_entry.Games }}</td>
+                                    <td data-sort-value="{{ stats_entry.WinRate }}" class="
+                                        {% if stats_entry.WinRate >= 60 %}wr-high
+                                        {% elif stats_entry.WinRate <= 45 %}wr-low
+                                        {% else %}wr-mid{% endif %}
+                                    ">{{ "%.1f"|format(stats_entry.WinRate) }}</td>
+                                    <td data-sort-value="{{ stats_entry.KDA }}">{{ "%.1f"|format(stats_entry.KDA) }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="notice">No SoloQ data available for {{ player }} with the selected filter.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p class="notice">No players found in the roster.</p>
+    {% endif %}
+
+    {# --- Секция Визуализации (График) --- #}
+    <hr>
+    <h2>SoloQ Games Over Time</h2>
+     <div>
+        {# Форма выбора игрока и периода для графика #}
+        <form method="get" class="filter-form" action="{{ url_for('soloq') }}">
+             {# Сохраняем основной фильтр времени и диапазон дат #}
+             <input type="hidden" name="time_filter" value="{{ request.args.get('time_filter', 'All Time') }}">
+             <input type="hidden" name="date_from" value="{{ request.args.get('date_from', '') }}">
+             <input type="hidden" name="date_to" value="{{ request.args.get('date_to', '') }}">
+
+            <label for="viz_player">Player:</label>
+            <select name="viz_player" id="viz_player">
+                {% for player in players %}
+                    <option value="{{ player }}" {% if selected_player_viz == player %}selected{% endif %}>{{ player }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="agg_type">Aggregate by:</label>
+            <select name="agg_type" id="agg_type">
+                <option value="Day" {% if selected_agg_type == 'Day' %}selected{% endif %}>Day</option>
+                <option value="Week" {% if selected_agg_type == 'Week' %}selected{% endif %}>Week</option>
+                <option value="Month" {% if selected_agg_type == 'Month' %}selected{% endif %}>Month</option>
+            </select>
+            <button type="submit" class="button">Show Chart</button>
+        </form>
+     </div>
+     <div style="margin-top: 1rem; max-width: 90%; margin-left: auto; margin-right: auto;">
+         {# Место для графика Chart.js #}
+        <canvas id="soloqActivityChart"></canvas>
+     </div>
+     {# --- Конец Секции Визуализации --- #}
+
+{% endblock %}
+
+{# --- JavaScript Блок --- #}
+{% block scripts %}
+{# Подключаем Chart.js и адаптер #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+<script>
+    // --- Код для графика активности SoloQ ---
+    const activityDataJson = {{ activity_data_json | safe }};
+    const ctx = document.getElementById('soloqActivityChart');
+    const selectedPlayerViz = "{{ selected_player_viz | default('') }}";
+    const selectedAggType = "{{ selected_agg_type | default('Day') }}";
+
+    let soloqChartInstance = null; // Глобальная переменная для инстанса графика
+
+    function renderSoloQChart() {
+        if (soloqChartInstance) { soloqChartInstance.destroy(); } // Уничтожаем старый график
+
+        if (ctx && activityDataJson && Object.keys(activityDataJson).length > 0) {
+            const sortedDates = Object.keys(activityDataJson).sort();
+            const labels = sortedDates;
+            const winData = sortedDates.map(date => activityDataJson[date].wins);
+            const lossData = sortedDates.map(date => activityDataJson[date].losses);
+
+            soloqChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [ { label: 'Wins', data: winData, backgroundColor: 'rgba(75, 192, 192, 0.6)', borderColor: 'rgba(75, 192, 192, 1)', borderWidth: 1 }, { label: 'Losses', data: lossData, backgroundColor: 'rgba(255, 99, 132, 0.6)', borderColor: 'rgba(255, 99, 132, 1)', borderWidth: 1 } ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: { title: { display: true, text: `SoloQ Games by ${selectedAggType} for ${selectedPlayerViz}` }, tooltip: { mode: 'index', intersect: false } },
+                    scales: { x: { type: 'time', time: { unit: selectedAggType.toLowerCase(), tooltipFormat: 'PP' }, stacked: true, title: { display: true, text: 'Date' } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Number of Games' } } }
+                }
+            });
+        } else if (ctx) {
+            // Очищаем и показываем сообщение, если данных нет
+            const context = ctx.getContext('2d');
+            context.clearRect(0, 0, ctx.width, ctx.height);
+            context.textAlign = 'center'; context.fillStyle = '#a0a0a0'; context.font = '16px Inter';
+            context.fillText('No activity data available for this selection.', ctx.width / 2, ctx.height / 2);
+        }
+    }
+    // Вызываем рендер при загрузке страницы
+    document.addEventListener('DOMContentLoaded', renderSoloQChart);
+
+    // --- Сюда можно добавить JS для сортировки таблиц статистики игроков ---
+
+</script>
+{% endblock %}

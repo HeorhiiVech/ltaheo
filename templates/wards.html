@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Warding Patterns{% endblock %}
+
+{% block content %}
+    <style>
+        .ward-map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1.5rem;
+        }
+        .ward-interval-block {
+            background-color: var(--bg-dark-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.8rem;
+        }
+        .ward-interval-block h5 {
+            text-align: center;
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9em;
+        }
+        .ward-map {
+            width: 300px;
+            height: 300px;
+            background-image: url('{{ url_for('static', filename='images/minimap.png') }}');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            background-color: #15181c;
+            margin: 0 auto;
+        }
+        .ward-placement {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .ward-icon-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1.5px solid #ffffff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.9);
+        }
+        .ward-icon-stealth { background-color: #2ecc71; }
+        .ward-icon-control { background-color: #e74c3c; }
+        .ward-icon-farsight { background-color: #3498db; }
+        .ward-tooltip {
+            visibility: hidden;
+            width: 110px;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 4px 0;
+            position: absolute;
+            z-index: 10;
+            bottom: 160%;
+            left: 50%;
+            margin-left: -55px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 0.7em;
+            pointer-events: none;
+        }
+        .ward-placement:hover .ward-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+
+    <div class="header-controls">
+        <h1>Warding Patterns</h1>
+        <div class="controls">
+            <form method="get" class="filter-form" action="{{ url_for('wards') }}">
+                <div class="filter-group">
+                    <label for="team_select">Team:</label>
+                    <select name="team" id="team_select">
+                        <option value="">-- Select Team --</option>
+                        {% for team_display_name in all_teams %}
+                            <option value="{{ team_display_name }}" {% if team_display_name == selected_team %}selected{% endif %}>
+                                {{ team_display_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="role_select">Role:</label>
+                    <select name="role" id="role_select">
+                        {% for role in roles %}
+                            <option value="{{ role }}" {% if role == selected_role %}selected{% endif %}>{{ role }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="champion_select">Champion:</label>
+                    <select name="champion" id="champion_select">
+                        {% for champ in available_champions %}
+                            <option value="{{ champ }}" {% if champ == selected_champion %}selected{% endif %}>{{ champ }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="games_filter_select">Last Games:</label>
+                    <select name="games_filter" id="games_filter_select">
+                        {% for gf in games_filters %}
+                            <option value="{{ gf }}" {% if gf == selected_games_filter %}selected{% endif %}>{{ gf }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="button">Apply Filter</button>
+            </form>
+        </div>
+    </div>
+    <hr>
+
+    {% if stats.error %}
+        <p class="notice" style="color: var(--stat-negative);">{{ stats.error }}</p>
+    {% elif stats.message %}
+         <p class="notice">{{ stats.message }}</p>
+    {% elif selected_team and wards_by_interval %}
+        <div class="ward-map-grid">
+            {% for interval_label, wards in wards_by_interval.items() %}
+                {% if wards %}
+                    <div class="ward-interval-block">
+                        <h5>{{ interval_label }} ({{ wards|length }} wards)</h5>
+                        <div class="ward-map">
+                            {% for ward in wards %}
+                                {% set max_coord = 15000.0 %}
+                                {% set pos_x_perc = (ward.pos_x | float / max_coord) * 100 if max_coord > 0 else 50 %}
+                                {% set pos_y_perc = (1 - (ward.pos_z | float / max_coord)) * 100 if max_coord > 0 else 50 %}
+                                <div class="ward-placement" style="left: {{ '%.2f'|format(pos_x_perc) }}%; top: {{ '%.2f'|format(pos_y_perc) }}%;">
+                                    {% set ward_class = 'ward-icon-stealth' %}
+                                    {% if 'Control' in ward.ward_type %}{% set ward_class = 'ward-icon-control' %}{% endif %}
+                                    {% if 'Farsight' in ward.ward_type %}{% set ward_class = 'ward-icon-farsight' %}{% endif %}
+                                    <div class="ward-icon-circle {{ ward_class }}"></div>
+                                    <span class="ward-tooltip">
+                                        {{ ward.player_name or 'N/A' }}<br>
+                                        ({{ ward.champion_name or 'N/A' }})<br>
+                                        @ {{ "%d:%02d" | format((ward.timestamp_seconds // 60)|int, (ward.timestamp_seconds % 60)|int) }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% if not wards_by_interval or not wards_by_interval | selectattr('1') | list %}
+             <p class="notice">No warding data found for the selected filters. Try updating the tournament data or changing filters.</p>
+        {% endif %}
+    {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('team_select').addEventListener('change', function() { this.form.submit(); });
+        document.getElementById('role_select').addEventListener('change', function() { this.form.submit(); });
+        document.getElementById('champion_select').addEventListener('change', function() { this.form.submit(); });
+        document.getElementById('games_filter_select').addEventListener('change', function() { this.form.submit(); });
+    });
+</script>
+{% endblock %}

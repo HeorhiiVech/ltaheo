@@ -1,0 +1,1031 @@
+/* static/style.css - Полная версия с боковым меню и компактным драфтом */
+
+/* --- Сброс и базовые стили --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg-dark-primary: #1a1d21;
+    --bg-dark-secondary: #25282e;
+    --bg-dark-tertiary: #30343b;
+    --border-color: #40454c;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --text-headings: #ffffff;
+    --accent-primary: #00aaff;
+    --accent-secondary: #007bff;
+    --stat-positive: #4caf50;
+    --stat-negative: #f44336;
+    --stat-neutral: #ff9800;
+    --font-main: 'Inter', sans-serif;
+    --sidebar-width: 230px; /* Ширина бокового меню */
+}
+
+body {
+    font-family: var(--font-main);
+    line-height: 1.6;
+    background-color: var(--bg-dark-primary);
+    color: var(--text-primary);
+}
+
+/* --- Макет: Сайдбар + Контент --- */
+.layout-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-dark-secondary);
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.sidebar-brand {
+    color: var(--text-headings);
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: 2rem;
+    text-align: center;
+    display: block;
+    padding: 0.5rem 0;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.sidebar-nav li {
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-nav .nav-link {
+    display: block;
+    padding: 0.7rem 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: var(--bg-dark-tertiary);
+    color: var(--text-primary);
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: var(--accent-primary);
+    color: white;
+    font-weight: 600;
+}
+
+.sidebar-footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.8em;
+    color: var(--text-secondary);
+}
+.sidebar-footer p {
+    margin-bottom: 0.5rem;
+}
+
+/* Основная область контента */
+.main-content {
+    flex-grow: 1;
+    padding: 1.5rem 2rem;
+    margin-left: var(--sidebar-width); /* Сдвиг вправо */
+    background-color: var(--bg-dark-primary);
+    min-height: 100vh;
+}
+
+/* Контейнер внутри main-content (для ограничения ширины) */
+.container {
+    width: 100%;
+    max-width: 1700px; /* Можете настроить */
+    margin: 0 auto;
+}
+
+
+/* --- Flash Messages --- */
+.flash-messages-container {
+    margin-bottom: 1.5rem;
+    padding: 0;
+}
+.flash-message {
+    padding: 0.8rem 1.2rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.3rem;
+    font-weight: 500;
+}
+.flash-info { background-color: #a8d8ff; color: #003366; border-color: #91c9ff; }
+.flash-success { background-color: #a3e9a4; color: #0d4b0f; border-color: #8fdc91; }
+.flash-error { background-color: #f5b7bd; color: #6b1118; border-color: #f1a0a8; }
+
+
+/* --- Общие стили элементов --- */
+h1, h2, h3, h4, h5 {
+    color: var(--text-headings);
+    margin-bottom: 1rem;
+}
+h1 { font-size: 2rem; font-weight: 700; }
+h2 { font-size: 1.6rem; font-weight: 600; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-top: 1.5rem; }
+h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.8rem;}
+h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;}
+h5 { font-size: 1rem; font-weight: 600; margin-bottom: 0.6rem; color: var(--text-primary); }
+
+hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 1.5rem 0;
+}
+
+.button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    border-radius: 0.3rem;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+    background-color: #495057;
+    color: #ffffff;
+    border-color: #495057;
+}
+.button:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+.button-update {
+    background-color: var(--accent-secondary);
+    border-color: var(--accent-secondary);
+}
+.button-update:hover {
+    opacity: 0.9;
+    background-color: var(--accent-secondary);
+    border-color: var(--accent-secondary);
+}
+/* Кнопки из формы календаря */
+#entry-form .button-delete { background-color: #dc3545; border-color: #dc3545; margin-right: auto; }
+#entry-form .button-delete:hover { background-color: #c82333; border-color: #bd2130; }
+#entry-form .button-delete.hidden { display: none; }
+#entry-form .button-cancel { background-color: var(--bg-dark-tertiary); border-color: var(--bg-dark-tertiary); }
+#entry-form .button-cancel:hover { background-color: #5a6268; border-color: #545b62; }
+
+
+select {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.3rem;
+    margin-left: 0.5rem;
+    background-color: var(--bg-dark-tertiary);
+    color: var(--text-primary);
+}
+
+.notice {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 1rem;
+    font-size: 0.9em;
+}
+
+/* Обертка для таблиц с горизонтальной прокруткой */
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-dark-tertiary) var(--bg-dark-secondary);
+}
+.table-responsive::-webkit-scrollbar { height: 8px; }
+.table-responsive::-webkit-scrollbar-track { background: var(--bg-dark-secondary); }
+.table-responsive::-webkit-scrollbar-thumb { background-color: var(--bg-dark-tertiary); border-radius: 4px; border: 2px solid var(--bg-dark-secondary); }
+
+/* Обертка для прокрутки ВНУТРИ блока */
+.table-responsive-inner {
+     overflow-x: auto;
+     width: 100%;
+     scrollbar-width: thin;
+     scrollbar-color: var(--bg-dark-tertiary) var(--bg-dark-secondary);
+}
+.table-responsive-inner::-webkit-scrollbar { height: 6px; }
+.table-responsive-inner::-webkit-scrollbar-track { background: var(--bg-dark-secondary); }
+.table-responsive-inner::-webkit-scrollbar-thumb { background-color: var(--bg-dark-tertiary); border-radius: 3px; border: 1px solid var(--bg-dark-secondary); }
+
+
+/* --- Стили для Scrims & Tournament --- */
+/* Контролы в шапке */
+.header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+.header-controls h1 { margin-bottom: 0; }
+.controls { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.filter-form label { font-weight: 500; color: var(--text-secondary); }
+
+/* Карточки общей статистики */
+.overall-stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.stat-card {
+    background-color: var(--bg-dark-secondary);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+.stat-card h3 { font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem; font-weight: 600; }
+.stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-headings); margin-bottom: 0.1rem; }
+.stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; }
+.stat-sublabel { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.95em; }
+.stat-positive { color: var(--stat-positive); }
+.stat-negative { color: var(--stat-negative); }
+.stat-card small { font-size: 0.8em; color: var(--text-secondary); }
+.stat-card-blue { background: linear-gradient(rgba(40, 100, 200, 0.1), rgba(40, 100, 200, 0.05)), var(--bg-dark-secondary); border-left: 4px solid #007bff; }
+.stat-card-red { background: linear-gradient(rgba(200, 50, 80, 0.1), rgba(200, 50, 80, 0.05)), var(--bg-dark-secondary); border-left: 4px solid #dc3545; }
+
+
+/* Кнопки фильтра по стороне */
+.side-filter-controls {
+    margin-bottom: 1rem;
+    margin-top: -0.5rem;
+    text-align: right;
+}
+.side-filter-controls .button {
+    margin-left: 5px;
+    background-color: var(--bg-dark-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+    opacity: 0.7;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+.side-filter-controls .button.active,
+.side-filter-controls .button:hover {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--text-headings);
+    opacity: 1.0;
+}
+
+/* Сетка статистики игроков/пиков по ролям */
+.player-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.player-column {
+    background-color: var(--bg-dark-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.8rem;
+    min-width: 240px;
+}
+.player-column h3 { text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.8rem; font-size: 1.15rem; color: var(--text-headings); }
+.player-column h5 { font-size: 1rem; font-weight: 600; margin-bottom: 0.6rem; color: var(--text-primary); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem; }
+
+/* Общая таблица (Пики, Баны, Дуо, Стата игроков) */
+.player-champ-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+.player-champ-table th,
+.player-champ-table td {
+    border: 1px solid var(--border-color);
+    padding: 6px 5px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.player-champ-table thead th {
+    background-color: var(--bg-dark-tertiary);
+    font-weight: 600;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.player-champ-table tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+.player-champ-table tbody tr:hover {
+    background-color: var(--bg-dark-tertiary);
+}
+.player-champ-table img {
+    display: block;
+    margin: 0 auto;
+    height: var(--icon-size, 35px); /* Умолчание для пиков/банов статы */
+    width: var(--icon-size, 35px);
+    vertical-align: middle;
+}
+/* Цвета WR */
+.wr-high { color: var(--stat-positive); font-weight: 600; }
+.wr-low { color: var(--stat-negative); font-weight: 600; }
+.wr-mid { color: var(--stat-neutral); font-weight: 500; }
+/* Сортируемые заголовки */
+.sortable-header { cursor: pointer; position: relative; padding-right: 15px; }
+.sortable-header::after { content: ''; position: absolute; right: 5px; top: 50%; margin-top: -5px; border: 5px solid transparent; opacity: 0.3; border-top-color: var(--text-secondary); }
+.sortable-header.asc::after { border-bottom-color: var(--text-primary); border-top-color: transparent; opacity: 1; margin-top: -2px; }
+.sortable-header.desc::after { border-top-color: var(--text-primary); border-bottom-color: transparent; opacity: 1; margin-top: -5px; }
+
+
+/* Сетка банов (статистика) */
+.bans-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.ban-table-block {
+    background-color: var(--bg-dark-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.6rem;
+    min-width: 220px;
+    border-left-width: 4px;
+}
+.ban-table-block h5 { text-align: center; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.6rem; color: var(--text-primary); padding-bottom: 0.4rem; border-bottom: 1px solid var(--border-color); }
+.ban-block-blue-theme { border-left-color: #007bff; }
+.ban-block-red-theme { border-left-color: #dc3545; }
+.ban-table-block .player-champ-table { font-size: 0.85em; }
+.ban-table-block .player-champ-table th,
+.ban-table-block .player-champ-table td { padding: 4px 3px; }
+.ban-table-block .player-champ-table th:nth-child(1), /* Icon */
+.ban-table-block .player-champ-table td:nth-child(1) { width: calc(var(--icon-size, 35px) + 6px); }
+.ban-table-block .player-champ-table th:nth-child(2), /* Champion */
+.ban-table-block .player-champ-table td:nth-child(2) { text-align: left; padding-left: 5px; }
+.ban-table-block .player-champ-table th:nth-child(3), /* Count */
+.ban-table-block .player-champ-table td:nth-child(3) { width: 45px; }
+
+
+/* Сетка дуо-пиков (статистика) */
+.duo-picks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.duo-pair-block {
+    background-color: var(--bg-dark-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.8rem;
+}
+.duo-pair-block h5 { text-align: center; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.8rem; color: var(--text-primary); padding-bottom: 0.4rem; border-bottom: 1px solid var(--border-color); }
+.duo-pair-table th, .duo-pair-table td { padding: 5px 4px; }
+/* Используем переменную --icon-size для дуо */
+.duo-pair-table img { height: var(--icon-size, 30px); width: var(--icon-size, 30px); }
+.duo-pair-table th:nth-child(1), .duo-pair-table td:nth-child(1),
+.duo-pair-table th:nth-child(2), .duo-pair-table td:nth-child(2) { width: calc(var(--icon-size, 30px) + 8px); padding-left: 2px; padding-right: 2px; }
+.duo-pair-table th:nth-child(3), .duo-pair-table td:nth-child(3) { width: 65px; }
+.duo-pair-table th:nth-child(4), .duo-pair-table td:nth-child(4) { width: 70px; }
+
+
+/* --- Стили для Секции Драфтов (Tournament Page) --- */
+.drafts-section {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem; /* Немного увеличил разрыв */
+    justify-content: center;
+    align-items: stretch; /* Выравнивание блоков по высоте */
+    width: 100%;
+}
+.match-block {
+    background-color: var(--bg-dark-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    flex: 0 1 400px; /* Задаем базовую ширину и разрешаем сжиматься/растягиваться */
+    max-width: 450px; /* Ограничиваем максимальную ширину */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+.match-block h5 { font-size: 1.0rem; margin-bottom: 0.8rem; padding-bottom: 0.4rem; text-align: center; border-bottom: 1px solid var(--border-color); }
+.game-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.game-toggle-btn { padding: 0.3rem 0.8rem; font-size: 0.85rem; background-color: var(--bg-dark-tertiary); border-color: var(--border-color); color: var(--text-secondary); opacity: 0.8; transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
+.game-toggle-btn.active, .game-toggle-btn:hover { background-color: var(--accent-primary); border-color: var(--accent-primary); color: var(--text-headings); opacity: 1; }
+.match-draft-details { margin-top: 0.8rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: flex-start; flex-grow: 1; }
+.draft-details { border: 1px dashed var(--border-color); padding: 0.6rem; background-color: rgba(0, 0, 0, 0.1); border-radius: 4px; width: 100%; /* Занимает всю ширину внутри .match-draft-details */ }
+.draft-details.hidden { display: none; }
+.draft-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.85em; }
+.draft-info .result-win { font-weight: bold; color: var(--stat-positive); }
+.draft-info .result-loss { font-weight: bold; color: var(--stat-negative); }
+.draft-info .result-unknown { font-weight: bold; color: var(--text-secondary); }
+.vod-link { color: var(--accent-primary); text-decoration: none; font-weight: 500; }
+.vod-link:hover { text-decoration: underline; }
+
+/* --- Стили для НОВОЙ Компактной Таблицы Драфта --- */
+.draft-table-compact {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    font-size: 0.85em;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-dark-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.draft-table-compact thead th {
+    padding: 5px 6px;
+    font-size: 0.9em;
+    background-color: var(--bg-dark-tertiary);
+    color: var(--text-primary);
+    text-align: center;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+}
+.draft-table-compact thead th:nth-child(1),
+.draft-table-compact thead th:nth-child(3) { width: 42%; }
+.draft-table-compact thead th:nth-child(2) { width: 16%; }
+
+.draft-table-compact tbody td {
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 3px 5px;
+    vertical-align: middle;
+    --local-icon-size: 22px; /* Размер иконок в драфте */
+    height: calc(var(--local-icon-size) + 8px);
+}
+.draft-table-compact tbody tr:last-child td { border-bottom: none; }
+
+/* Ячейка с иконкой и именем */
+.draft-table-compact .action-cell {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    gap: 4px;
+}
+.draft-table-compact .action-cell.red-side {
+    text-align: right;
+    justify-content: flex-end;
+}
+.draft-table-compact .action-cell img {
+    width: var(--local-icon-size);
+    height: var(--local-icon-size);
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.draft-table-compact .action-cell span {
+    vertical-align: middle;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+}
+
+/* Центральная ячейка */
+.draft-table-compact .action-label {
+    font-size: 0.85em; /* Чуть меньше */
+    text-align: center;
+    font-weight: bold;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    background-color: rgba(0,0,0,0.15);
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+}
+
+/* Строки банов/пиков */
+.draft-table-compact .ban-row { background-color: rgba(220, 53, 69, 0.1); }
+.draft-table-compact .ban-row .action-label { color: #f5c6cb; background-color: rgba(220, 53, 69, 0.2); }
+.draft-table-compact .pick-row { background-color: rgba(0, 123, 255, 0.05); }
+.draft-table-compact .pick-row .action-label { color: #85c9ff; background-color: rgba(0, 123, 255, 0.1); }
+
+
+/* --- Стили для Schedule (Календарь, Заметки, Модальное окно) --- */
+/* ... (стили для календаря остаются как были) ... */
+.calendar-container { margin-bottom: 2rem; }
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
+.calendar-header h2 { margin: 0; border: none; font-size: 1.8rem; }
+.calendar-nav a { color: var(--accent-primary); text-decoration: none; font-weight: bold; padding: 0.3rem 0.8rem; border: 1px solid var(--border-color); border-radius: 4px; transition: background-color 0.2s, color 0.2s; }
+.calendar-nav a:hover { background-color: var(--bg-dark-tertiary); color: var(--text-primary); }
+.calendar-grid { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid var(--border-color); }
+.calendar-grid th { text-align: center; padding: 0.6rem 0.2rem; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); font-size: 0.9em; background-color: var(--bg-dark-tertiary); }
+.calendar-grid td { border: 1px solid var(--border-color); height: 120px; vertical-align: top; padding: 5px; position: relative; background-color: var(--bg-dark-secondary); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--bg-dark-tertiary) var(--bg-dark-secondary); }
+.calendar-grid td::-webkit-scrollbar { width: 5px; }
+.calendar-grid td::-webkit-scrollbar-track { background: var(--bg-dark-secondary); }
+.calendar-grid td::-webkit-scrollbar-thumb { background-color: var(--bg-dark-tertiary); border-radius: 3px; }
+.calendar-grid td.padding-day { background-color: var(--bg-dark-primary); opacity: 0.5; }
+.calendar-grid td.today-cell { background-color: rgba(0, 123, 255, 0.1); border: 1px solid var(--accent-primary); }
+.day-number { font-weight: bold; font-size: 0.9em; color: var(--text-primary); margin-bottom: 4px; display: block; text-align: right; }
+.day-number.today { background-color: var(--accent-primary); color: white; border-radius: 50%; width: 1.6em; height: 1.6em; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 4px; float: right; clear: both; }
+.day-entries { font-size: 0.8em; line-height: 1.4; clear: both; }
+.calendar-entry { display: block; padding: 3px 5px; margin-bottom: 3px; border-radius: 3px; background-color: rgba(255, 255, 255, 0.05); color: var(--text-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; position: relative; border-left: 3px solid transparent; }
+.calendar-entry[data-type="SCRIMS"] { border-left-color: var(--color-scrims, #4a90e2); }
+.calendar-entry[data-type="OFFICIAL"] { border-left-color: var(--color-official, #d0021b); }
+.calendar-entry[data-type="MEETING"] { border-left-color: var(--color-meeting, #f5a623); }
+.calendar-entry[data-type="SOLOQ"] { border-left-color: var(--color-soloq, #7ed321); }
+.calendar-entry[data-type="OFFDAY"] { border-left-color: var(--color-offday, #9b9b9b); }
+.calendar-entry:hover { background-color: rgba(255, 255, 255, 0.1); }
+.add-entry-btn { position: absolute; top: 4px; right: 4px; font-size: 1.3em; line-height: 1; color: var(--text-secondary); cursor: pointer; text-decoration: none; opacity: 0.3; transition: opacity 0.2s, color 0.2s; padding: 0 2px; border-radius: 3px; }
+.add-entry-btn:hover { opacity: 1; color: var(--accent-primary); background-color: rgba(0,0,0,0.2); }
+.calendar-grid td:hover .add-entry-btn { opacity: 1; }
+.notes-container { margin-top: 2rem; }
+.notes-container h3 { margin-bottom: 0.5rem; }
+.notes-textarea { width: 100%; min-height: 150px; background-color: var(--bg-dark-primary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; font-family: inherit; font-size: 0.95em; border-radius: 4px; resize: vertical; }
+.notes-controls { margin-top: 0.5rem; text-align: right; }
+/* Модальное окно */
+.modal { display: block; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.6); opacity: 1; visibility: visible; transition: opacity 0.3s ease, visibility 0.3s ease; }
+.modal.hidden { opacity: 0; visibility: hidden; }
+.modal-content { background-color: var(--bg-dark-secondary); color: var(--text-primary); margin: 10% auto; padding: 25px; border: 1px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+.modal-close-btn { color: var(--text-secondary); position: absolute; top: 10px; right: 15px; font-size: 1.8rem; font-weight: bold; line-height: 1; cursor: pointer; transition: color 0.2s; }
+.modal-close-btn:hover, .modal-close-btn:focus { color: var(--text-primary); text-decoration: none; }
+.modal-content h3 { margin-top: 0; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+#entry-form .form-group { margin-bottom: 1rem; }
+#entry-form label { display: block; margin-bottom: 0.3rem; font-weight: 500; font-size: 0.9em; color: var(--text-secondary); }
+#entry-form input[type="text"], #entry-form input[type="time"], #entry-form select, #entry-form textarea { width: 100%; padding: 0.5rem 0.7rem; background-color: var(--bg-dark-primary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 1em; box-sizing: border-box; }
+#entry-form textarea { resize: vertical; min-height: 60px; }
+#entry-form select { appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23aaa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right .7em top 50%; background-size: .65em auto; padding-right: 2em; }
+#entry-form .form-actions { margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+
+.scrims-table {
+    width: 100%; /* Таблица пытается занять всю ширину */
+    border-collapse: collapse;
+    font-size: 0.85em; /* Можно немного уменьшить шрифт */
+    table-layout: auto; /* Позволяем браузеру определять ширину колонок */
+    margin-top: 1rem; /* Добавим отступ сверху */
+}
+
+.scrims-table th,
+.scrims-table td {
+    border: 1px solid var(--border-color);
+    padding: 5px 8px; /* Немного скорректируем паддинг */
+    text-align: left; /* Выравнивание по левому краю для большинства */
+    vertical-align: middle;
+    white-space: nowrap; /* Запрещаем перенос текста по умолчанию */
+}
+
+.scrims-table thead th {
+    background-color: var(--bg-dark-tertiary);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.scrims-table tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+.scrims-table tbody tr:hover {
+    background-color: var(--bg-dark-tertiary);
+}
+
+/* Задаем МИНИМАЛЬНУЮ ширину для текстовых колонок */
+.scrims-table .col-date { min-width: 110px; }
+.scrims-table .col-patch { min-width: 45px; text-align: center; }
+.scrims-table .col-team { min-width: 100px; }
+.scrims-table .col-result { min-width: 60px; text-align: center; font-weight: bold;}
+.scrims-table .col-duration { min-width: 60px; text-align: center; }
+
+/* Стили для колонок с иконками (пики/баны) */
+.scrims-table .col-picks-bans {
+    min-width: 160px; /* Даем им некоторую базовую ширину */
+    text-align: left; /* Иконки будут слева */
+    white-space: normal; /* Разрешаем перенос иконок, если не влезают */
+}
+
+.scrims-table .col-picks-bans img {
+    /* Иконки в истории скримов могут быть чуть меньше */
+    height: 22px;
+    width: 22px;
+    margin: 1px 1px; /* Уменьшим отступы */
+    vertical-align: middle;
+    display: inline-block; /* Чтобы margin работал */
+}
+
+/* Стили для результата (Win/Loss) */
+.scrims-table .result-win { color: var(--stat-positive); }
+.scrims-table .result-loss { color: var(--stat-negative); }
+.scrims-table .result-unknown,
+.scrims-table .result-remake { color: var(--text-secondary); }
+
+/* static/style.css */
+
+/* ... (все предыдущие стили) ... */
+
+/* --- Стили для Draft Patterns --- */
+.draft-patterns-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* 2 колонки, адаптивные */
+    gap: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.draft-pattern-block {
+    background-color: var(--bg-dark-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    border-left-width: 4px; /* Цветная полоска сбоку */
+}
+.draft-pattern-block.blue-side-pattern { border-left-color: #007bff; }
+.draft-pattern-block.red-side-pattern { border-left-color: #dc3545; }
+
+.draft-pattern-block h5 {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1rem;
+}
+
+.draft-pattern-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85em;
+}
+
+.draft-pattern-table th,
+.draft-pattern-table td {
+    border: 1px solid var(--border-color);
+    padding: 5px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.draft-pattern-table thead th {
+    background-color: var(--bg-dark-tertiary);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+/* Первая колонка (Phase) */
+.draft-pattern-table th:first-child,
+.draft-pattern-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 80px; /* Чтобы текст фазы помещался */
+    background-color: rgba(0,0,0,0.1);
+}
+/* Ячейки с процентами */
+.draft-pattern-table td {
+     font-weight: 500;
+}
+.draft-pattern-table td:not(:first-child):hover {
+    background-color: rgba(255, 255, 255, 0.05); /* Легкая подсветка процента */
+}
+
+.pattern-game-count {
+    display: block;
+    text-align: right;
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* --- Стили для подсветки ячеек Draft Pattern --- */
+.draft-pattern-table td.dp-cell { /* Базовый класс для ячеек с процентами */
+    transition: background-color 0.2s ease-in-out; /* Плавный переход цвета (опционально) */
+    font-weight: 500; /* Стандартный вес шрифта */
+    color: var(--text-primary); /* Стандартный цвет текста */
+}
+
+.draft-pattern-table td.dp-zero { /* 0% */
+    color: var(--text-secondary); /* Более тусклый цвет для нуля */
+     /* background-color: transparent; */ /* Или не задавать фон */
+}
+
+.draft-pattern-table td.dp-low { /* > 0% до 25% */
+    background-color: rgba(0, 123, 255, 0.1); /* Очень слабый синий фон */
+}
+
+.draft-pattern-table td.dp-medium { /* 26% до 50% */
+    background-color: rgba(0, 123, 255, 0.25); /* Слабый синий фон */
+}
+
+.draft-pattern-table td.dp-high { /* 51% до 75% */
+    background-color: rgba(0, 123, 255, 0.45); /* Средний синий фон */
+    color: #ffffff; /* Белый текст для лучшей читаемости */
+}
+
+.draft-pattern-table td.dp-very-high { /* > 75% */
+    background-color: rgba(0, 123, 255, 0.65); /* Интенсивный синий фон */
+    font-weight: bold; /* Выделяем жирным */
+    color: #ffffff; /* Белый текст */
+}
+
+/* Можно добавить hover эффект, если нужно */
+.draft-pattern-table td.dp-cell:hover {
+    filter: brightness(1.2); /* Немного осветлить при наведении */
+}
+
+.jungle-path-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em; /* Базовый размер шрифта таблицы */
+    margin-bottom: 1rem; /* Отступ снизу */
+    background-color: var(--bg-dark-secondary); /* Фон таблицы */
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden; /* Чтобы рамка скруглялась */
+}
+
+.jungle-path-history-table thead th {
+    background-color: var(--bg-dark-tertiary);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.85em;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.jungle-path-history-table tbody td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle; /* Выравнивание по центру */
+}
+
+.jungle-path-history-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.jungle-path-history-table tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.jungle-path-history-table tbody tr:hover {
+    background-color: var(--bg-dark-tertiary);
+}
+
+/* Стили для первых колонок (можно задать ширину) */
+.jungle-path-history-table th:nth-child(1),
+.jungle-path-history-table td:nth-child(1) { /* Jungler */
+    min-width: 130px;
+}
+.jungle-path-history-table th:nth-child(2),
+.jungle-path-history-table td:nth-child(2) { /* vs */
+    min-width: 130px;
+}
+.jungle-path-history-table th:nth-child(3),
+.jungle-path-history-table td:nth-child(3) { /* Opponent */
+    min-width: 100px;
+}
+.jungle-path-history-table th:nth-child(4),
+.jungle-path-history-table td:nth-child(4) { /* Side */
+     width: 50px; text-align: center;
+}
+.jungle-path-history-table th:nth-child(5),
+.jungle-path-history-table td:nth-child(5) { /* Result */
+    width: 60px; text-align: center;
+}
+
+/* Стили для колонки Path Sequence */
+.jungle-path-history-table th.path-sequence-header {
+    text-align: left; /* Заголовок слева */
+}
+.jungle-path-history-table td.path-sequence-cell {
+    text-align: left;
+    white-space: normal; /* Разрешаем перенос строки, если путь очень длинный */
+    line-height: 1.6; /* Увеличим межстрочный интервал для читаемости */
+}
+
+/* Стиль для каждого элемента пути */
+.path-action {
+    display: inline-block; /* Отображаем в линию */
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    margin: 2px 3px; /* Небольшие отступы */
+    border-radius: 3px;
+    font-size: 0.9em;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap; /* Запрещаем перенос внутри элемента */
+}
+
+.hidden {
+    display: none !important; /* Используем !important на всякий случай, если другие стили переопределяют */
+}
+
+
+
+/* --- Стили для секции Player Positions --- */
+
+/* Контейнер для всех блоков серий (аналогично drafts-section) */
+.position-snapshots-section {
+    /* Стили уже заданы через inline в HTML (flex, gap, etc.) */
+    /* Можно перенести их сюда для чистоты, если хотите */
+    margin-top: 1rem; /* Отступ сверху */
+    margin-bottom: 1.5rem; /* Отступ снизу */
+}
+
+/* Блок одной серии (наследует стили .match-block) */
+.position-snapshot-block {
+    /* Можно добавить специфичные стили, если нужно */
+    /* Например, немного другая максимальная ширина */
+    max-width: 650px; /* Подберите ширину, чтобы 3 миникарты помещались */
+    flex: 1 1 600px; /* Позволяем немного растягиваться/сжиматься */
+}
+
+/* Обертка для контента одной игры (позиции) */
+.pos-game-content-wrapper {
+    border: 1px dashed var(--border-color); /* Граница как у драфтов */
+    padding: 0.8rem;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    margin-top: 0.5rem; /* Небольшой отступ от кнопок */
+}
+/* Скрытие по умолчанию */
+.pos-game-content-wrapper.hidden {
+    display: none;
+}
+
+/* Контейнер для ТРЕХ миникарт (горизонтальное расположение) */
+.minimap-snapshots-container {
+    display: flex;
+    justify-content: space-around; /* Или space-between */
+    align-items: flex-start; /* Выравнивание по верху */
+    gap: 0.8rem; /* Промежуток между картами */
+    flex-wrap: wrap; /* Перенос на новую строку, если не влезают */
+}
+
+/* Обертка для ОДНОЙ миникарты и ее метки времени */
+.minimap-snapshot-wrapper {
+    display: flex;
+    flex-direction: column; /* Метка над картой */
+    align-items: center; /* Центрируем карту под меткой */
+}
+
+/* Метка времени над картой */
+.minimap-timestamp-label {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+/* Сама миникарта (фон и контейнер для иконок) */
+.minimap-snapshot {
+    width: 240px;  /* Ширина миникарты - можно настроить */
+    height: 240px; /* Высота миникарты - должна соответствовать пропорциям */
+    background-image: url('/static/images/minimap.png'); /* Путь к вашему файлу! */
+    background-size: contain; /* Или cover, подберите что лучше */
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 1px solid var(--border-color);
+    position: relative; /* Для абсолютного позиционирования иконок внутри */
+    overflow: hidden; /* Обрезаем иконки, выходящие за рамки */
+    background-color: #15181c; /* Темный фон на случай, если картинка не загрузится */
+}
+
+/* Стиль для иконок игроков на карте */
+.player-icon {
+    position: absolute; /* Абсолютное позиционирование */
+    width: 28px;       /* Размер иконки - настройте */
+    height: 28px;
+    border-radius: 50%; /* Круглая форма */
+    /* Центрирование иконки относительно координат (left, top) */
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.7); /* Небольшая тень для видимости */
+    background-color: rgba(0, 0, 0, 0.3); /* Полупрозрачный фон под иконкой */
+}
+
+/* Синяя рамка для синей команды */
+.player-icon.team-blue {
+    border: 3px solid #3498db; /* Толще и цвет */
+    box-shadow: 0 0 15px rgba(52, 152, 219, 1.0); /* Свечение (полностью непрозрачное) */
+}
+
+/* Красная рамка для красной команды */
+.player-icon.team-red {
+    border: 3px solid #e74c3c; /* Толще и цвет */
+    box-shadow: 0 0 15px rgba(231, 76, 60, 1.0); /* Свечение (полностью непрозрачное) */
+}
+
+/* Fallback иконки */
+.player-icon-fallback {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(136, 136, 136, 0.5);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #444;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+.player-icon-fallback.team-blue {
+    background-color: #3498db;
+    border-color: rgba(133, 193, 233, 0.6);
+    box-shadow: 0 0 5px rgba(52, 152, 219, 1.0); /* Свечение */
+}
+.player-icon-fallback.team-red {
+     background-color: #e74c3c;
+     border-color: rgba(241, 148, 138, 0.6);
+     box-shadow: 0 0 5px rgba(231, 76, 60, 1.0); /* Свечение */
+}
+
+
+/* 1. Обертка для ПОЗИЦИОНИРОВАНИЯ иконки */
+.player-position-wrapper {
+    position: absolute; /* Абсолютное позиционирование обертки */
+    /* Центрируем обертку по координатам (left, top) */
+    transform: translate(-50%, -50%);
+    /* Убрали размер/стили отсюда, они будут у img/span внутри */
+}
+
+/* 2. Стили для КАРТИНКИ (img) внутри обертки */
+.player-position-wrapper img {
+    display: block; /* Важно для border-radius */
+    width: 26px;       /* Размер картинки (можешь изменить) */
+    height: 26px;      /* Размер картинки */
+    border-radius: 50%; /* Делаем картинку круглой */
+    border: 2px solid transparent; /* Прозрачная рамка по умолчанию */
+    background-color: rgba(0, 0, 0, 0.3); /* Фон на случай медленной загрузки */
+}
+
+/* 3. Синяя рамка и свечение для img ВНУТРИ обертки с классом team-blue */
+.player-position-wrapper.team-blue img {
+    border-color: #3498db; /* Цвет рамки */
+    box-shadow: 0 0 26px rgba(52, 152, 219, 1.0); /* Свечение */
+}
+
+/* 4. Красная рамка и свечение для img ВНУТРИ обертки с классом team-red */
+.player-position-wrapper.team-red img {
+    border-color: #e74c3c; /* Цвет рамки */
+    box-shadow: 0 0 26px rgba(231, 76, 60, 1.0); /* Свечение */
+}
+
+/* 5. Стиль для fallback ЗАГЛУШКИ "?" (span), когда картинка не найдена */
+/* Заглушка тоже будет спозиционирована оберткой */
+.player-position-wrapper .player-icon-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(136, 136, 136, 0.5);
+    background-color: #444;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    /* Важно: эти стили НЕ нужны, так как позиционирование делает обертка */
+    /* position: absolute; */
+    /* transform: translate(-50%, -50%); */
+    /* left: 50%; */
+    /* top: 50%; */
+}
+
+/* Цветные стили для fallback заглушки */
+.player-position-wrapper.team-blue .player-icon-fallback {
+    background-color: #3498db;
+    border-color: rgba(133, 193, 233, 0.6);
+    box-shadow: 0 0 3px rgba(52, 152, 219, 1.0);
+}
+.player-position-wrapper.team-red .player-icon-fallback {
+     background-color: #e74c3c;
+     border-color: rgba(241, 148, 138, 0.6);
+     box-shadow: 0 0 3px rgba(231, 76, 60, 1.0);
+}

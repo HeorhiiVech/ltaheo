@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LTA South{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="layout-container">
+        <nav class="sidebar">
+            <a href="{{ url_for('index') }}" class="sidebar-brand">Vivo Keyd Stars</a>
+            <ul class="sidebar-nav">
+                <li><a href="{{ url_for('tournament') }}" class="nav-link {% if request.endpoint == 'tournament' %}active{% endif %}">LTA South</a></li>
+                <li><a href="{{ url_for('wards') }}" class="nav-link {% if request.endpoint == 'wards' %}active{% endif %}">Wards</a></li>
+                <li><a href="{{ url_for('proximity') }}" class="nav-link {% if request.endpoint == 'proximity' %}active{% endif %}">Proximity</a></li> {# <<< НОВАЯ ССЫЛКА #}
+                <li><a href="{{ url_for('soloq') }}" class="nav-link {% if request.endpoint == 'soloq' %}active{% endif %}">SoloQ Stats</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                 <p>&copy; {{ now.year }}</p>
+            </div>
+        </nav>
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages-container container">
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
