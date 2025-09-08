@@ -12,11 +12,12 @@
 <body>
     <div class="layout-container">
         <nav class="sidebar">
-            <a href="{{ url_for('index') }}" class="sidebar-brand">Vivo Keyd Stars</a>
+            <a href="{{ url_for('index') }}" class="sidebar-brand">heovech</a>
             <ul class="sidebar-nav">
                 <li><a href="{{ url_for('tournament') }}" class="nav-link {% if request.endpoint == 'tournament' %}active{% endif %}">LTA South</a></li>
                 <li><a href="{{ url_for('wards') }}" class="nav-link {% if request.endpoint == 'wards' %}active{% endif %}">Wards</a></li>
-                <li><a href="{{ url_for('proximity') }}" class="nav-link {% if request.endpoint == 'proximity' %}active{% endif %}">Proximity</a></li> {# <<< НОВАЯ ССЫЛКА #}
+                <li><a href="{{ url_for('proximity') }}" class="nav-link {% if request.endpoint == 'proximity' %}active{% endif %}">Proximity</a></li>
+                <li><a href="{{ url_for('start_positions') }}" class="nav-link {% if request.endpoint == 'start_positions' %}active{% endif %}">Start Positions</a></li> {# <<< НОВАЯ ССЫЛКА #}
                 <li><a href="{{ url_for('soloq') }}" class="nav-link {% if request.endpoint == 'soloq' %}active{% endif %}">SoloQ Stats</a></li>
             </ul>
             <div class="sidebar-footer">

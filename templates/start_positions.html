@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}Start Positions{% endblock %}
+
+{% block content %}
+<style>
+    /* Стили для страницы Start Positions */
+    .sp-controls-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0.8rem;
+        background-color: var(--bg-dark-secondary);
+        border-radius: 6px;
+    }
+
+    .sp-main-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .sp-main-controls .button {
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
+    }
+    
+    .sp-main-controls .speed-btn.active {
+        background-color: var(--accent-primary);
+        border-color: var(--accent-primary);
+        color: white;
+    }
+
+    .sp-timeline-slider-container {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 250px;
+    }
+    .sp-timeline-slider-container label {
+        white-space: nowrap;
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+    
+    #timeline-slider {
+        width: 100%;
+        cursor: pointer;
+    }
+    
+    #timeline-display {
+        font-family: monospace;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-headings);
+        background-color: var(--bg-dark-primary);
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    /* <<< ИЗМЕНЕНИЕ: Уменьшена минимальная ширина блока для сетки */
+    .start-positions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .sp-game-block {
+        background-color: var(--bg-dark-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 0.8rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .sp-game-info {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0.8rem;
+        font-size: 0.9em;
+        padding: 5px;
+        background-color: rgba(0,0,0,0.1);
+        border-radius: 3px;
+    }
+    .sp-game-info .team-blue { color: #5dade2; font-weight: 600; }
+    .sp-game-info .team-red { color: #e74c3c; font-weight: 600; }
+     .sp-game-info .vs { margin: 0 10px; color: var(--text-secondary); }
+
+    /* <<< ИЗМЕНЕНИЕ: Уменьшен размер миникарты */
+    .sp-minimap {
+        width: 300px;
+        height: 300px;
+        background-image: url('{{ url_for('static', filename='images/minimap.png') }}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+        background-color: #15181c;
+    }
+
+    /* <<< ИЗМЕНЕНИЕ: Уменьшен размер иконки чемпиона */
+    .sp-player-icon-wrapper {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        transform: translate(-50%, -50%);
+        transition: left 0.1s linear, top 0.1s linear; /* Плавное движение */
+    }
+
+    .sp-player-icon-wrapper img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        box-shadow: 0 0 8px rgba(0,0,0,0.8);
+    }
+    
+    .sp-player-icon-wrapper.team-blue img {
+        border-color: #3498db;
+        box-shadow: 0 0 10px rgba(52, 152, 219, 1);
+    }
+
+    .sp-player-icon-wrapper.team-red img {
+        border-color: #e74c3c;
+        box-shadow: 0 0 10px rgba(231, 76, 60, 1);
+    }
+</style>
+
+<div class="header-controls">
+    <h1>Start Positions Analysis</h1>
+    <div class="controls">
+        <form method="get" class="filter-form" action="{{ url_for('start_positions') }}">
+             <div class="filter-group">
+                <label for="team_select">Team:</label>
+                <select name="team" id="team_select" onchange="this.form.submit()">
+                    <option value="">-- Select Team --</option>
+                    {% for team_display_name in all_teams %}
+                        <option value="{{ team_display_name }}" {% if team_display_name == selected_team %}selected{% endif %}>
+                            {{ team_display_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="champion_select">Champion:</label>
+                <select name="champion" id="champion_select" onchange="this.form.submit()">
+                     {% for champ in available_champions %}
+                        <option value="{{ champ }}" {% if champ == selected_champion %}selected{% endif %}>{{ champ }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="games_filter_select">Last Games:</label>
+                <select name="games_filter" id="games_filter_select" onchange="this.form.submit()">
+                    {% for gf in games_filters %}
+                        <option value="{{ gf }}" {% if gf == selected_games_filter %}selected{% endif %}>{{ gf }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <noscript><button type="submit" class="button">Apply Filter</button></noscript>
+        </form>
+    </div>
+</div>
+<hr>
+
+{% if stats.error %}
+    <p class="notice error-message">{{ stats.error }}</p>
+{% elif stats.message %}
+    <p class="notice">{{ stats.message }}</p>
+{% elif selected_team and stats.games_data %}
+    
+    <div class="sp-controls-container">
+        <div class="sp-main-controls">
+            <button id="start-animation-btn" class="button button-update">▶ Start</button>
+            <button class="button speed-btn" data-speed="1.5">x1.5</button>
+            <button class="button speed-btn" data-speed="2">x2</button>
+            <button class="button speed-btn active" data-speed="2.5">x2.5</button>
+            <button class="button speed-btn" data-speed="3">x3</button>
+            <button class="button speed-btn" data-speed="4">x4</button>
+        </div>
+        <div class="sp-timeline-slider-container">
+             <label for="timeline-slider">Timeline:</label>
+             <input type="range" id="timeline-slider" min="0" max="100000" value="0" step="100">
+             <span id="timeline-display">00:00</span>
+        </div>
+    </div>
+
+    <div class="start-positions-grid">
+        {% for game in stats.games_data %}
+            <div class="sp-game-block" 
+                 data-timeline='{{ game.timeline | safe }}' 
+                 data-player-icons='{{ game.player_icons | safe }}' 
+                 data-game-id="{{ game.game_id }}">
+                <div class="sp-game-info">
+                    <span class="team-blue">{{ game.blue_team }}</span>
+                    <span class="vs">vs</span>
+                    <span class="team-red">{{ game.red_team }}</span>
+                     <span style="margin-left: 15px;">Result: <strong class="{{ 'stat-positive' if game.is_win else 'stat-negative' }}">{{ 'Win' if game.is_win else 'Loss' }}</strong></span>
+                </div>
+                <div class="sp-minimap" id="minimap-{{ game.game_id }}">
+                    {# Иконки игроков будут добавлены сюда с помощью JS #}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const animationManager = {
+        games: [],
+        isPlaying: false,
+        animationFrameId: null,
+        startTime: 0,
+        speed: 2.5,
+        currentTime: 0,
+        maxTime: 100000,
+
+        init() {
+            document.querySelectorAll('.sp-game-block').forEach(block => {
+                const timeline = JSON.parse(block.dataset.timeline);
+                const playerIconsHtml = JSON.parse(block.dataset.playerIcons);
+                const minimap = block.querySelector('.sp-minimap');
+                if (timeline.length > 0) {
+                    this.games.push({
+                        id: block.dataset.gameId,
+                        timeline: timeline,
+                        playerIconsHtml: playerIconsHtml,
+                        minimap: minimap,
+                        playerIconElements: new Map()
+                    });
+                }
+            });
+
+            this.initControls();
+            this.renderInitialState();
+        },
+
+        initControls() {
+            const startBtn = document.getElementById('start-animation-btn');
+            const slider = document.getElementById('timeline-slider');
+
+            if (startBtn) {
+                startBtn.addEventListener('click', () => this.togglePlay());
+            }
+            
+            document.querySelectorAll('.speed-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.setSpeed(parseFloat(btn.dataset.speed));
+                });
+            });
+
+            if (slider) {
+                slider.addEventListener('input', (e) => {
+                    if(this.isPlaying) this.pause();
+                    this.scrubTo(parseInt(e.target.value, 10));
+                });
+            }
+        },
+
+        setSpeed(newSpeed) {
+            const wasPlaying = this.isPlaying;
+            if (wasPlaying) this.pause();
+            this.speed = newSpeed;
+            if (wasPlaying) this.play();
+        },
+
+        togglePlay() {
+            if (this.isPlaying) {
+                this.pause();
+            } else {
+                this.play();
+            }
+        },
+        
+        play() {
+            const startBtn = document.getElementById('start-animation-btn');
+            if (this.currentTime >= this.maxTime) {
+                this.currentTime = 0;
+            }
+            this.isPlaying = true;
+            if(startBtn) startBtn.textContent = '❚❚ Pause';
+            this.startTime = performance.now() - (this.currentTime / this.speed);
+            this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
+        },
+
+        pause() {
+            const startBtn = document.getElementById('start-animation-btn');
+            this.isPlaying = false;
+            if(startBtn) startBtn.textContent = '▶ Start';
+            if (this.animationFrameId) {
+                cancelAnimationFrame(this.animationFrameId);
+            }
+        },
+        
+        animate(timestamp) {
+            if (!this.isPlaying) return;
+
+            const elapsed = (performance.now() - this.startTime) * this.speed;
+            this.currentTime = Math.min(elapsed, this.maxTime);
+            
+            this.updateAllMaps(this.currentTime);
+            
+            if (this.currentTime >= this.maxTime) {
+                this.pause();
+                this.scrubTo(this.maxTime);
+            } else {
+                this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
+            }
+        },
+
+        updateAllMaps(timeMs) {
+            const slider = document.getElementById('timeline-slider');
+            const display = document.getElementById('timeline-display');
+            
+            if (slider) slider.value = timeMs;
+            
+            if(display){
+                const seconds = Math.floor(timeMs / 1000);
+                const minutes = Math.floor(seconds / 60);
+                display.textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+            }
+
+            this.games.forEach(game => {
+                const [currentFrame, nextFrame] = this.findInterpolationFrames(game.timeline, timeMs);
+                if (currentFrame) {
+                    this.updateMapPlayers(game, currentFrame, nextFrame, timeMs);
+                }
+            });
+        },
+        
+        scrubTo(timeMs) {
+            this.currentTime = timeMs;
+            this.updateAllMaps(timeMs);
+        },
+
+        findInterpolationFrames(timeline, timeMs) {
+            let prev = null;
+            for (const frame of timeline) {
+                if (frame.timestamp <= timeMs) {
+                    prev = frame;
+                } else {
+                    return [prev, frame];
+                }
+            }
+            return [prev, null];
+        },
+        
+        renderInitialState() {
+            this.games.forEach(game => {
+                game.minimap.innerHTML = '';
+                game.playerIconElements.clear();
+
+                const initialFrame = game.timeline[0];
+                if (initialFrame) {
+                    initialFrame.positions.forEach(playerData => {
+                        const iconHtml = game.playerIconsHtml[playerData.championName];
+                        if (iconHtml) {
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = iconHtml;
+                            const iconImg = tempDiv.firstChild;
+
+                            const iconWrapper = document.createElement('div');
+                            iconWrapper.className = `sp-player-icon-wrapper ${playerData.teamId === 100 ? 'team-blue' : 'team-red'}`;
+                            iconWrapper.appendChild(iconImg);
+                            
+                            game.minimap.appendChild(iconWrapper);
+                            game.playerIconElements.set(playerData.championName, iconWrapper);
+                        }
+                    });
+                }
+            });
+            this.updateAllMaps(0);
+        },
+        
+        updateMapPlayers(game, currentFrame, nextFrame, timeMs) {
+            const maxCoord = 15000.0;
+            const updatedChamps = new Set();
+
+            currentFrame.positions.forEach(p1 => {
+                const icon = game.playerIconElements.get(p1.championName);
+                if (icon) {
+                    let posX = p1.x;
+                    let posZ = p1.z;
+
+                    if (nextFrame) {
+                        const p2 = nextFrame.positions.find(p => p.championName === p1.championName);
+                        if (p2) {
+                            const t = (timeMs - currentFrame.timestamp) / (nextFrame.timestamp - currentFrame.timestamp);
+                            posX = p1.x + (p2.x - p1.x) * t;
+                            posZ = p1.z + (p2.z - p1.z) * t;
+                        }
+                    }
+
+                    const posXPercent = (posX / maxCoord) * 100;
+                    const posYPercent = (1 - (posZ / maxCoord)) * 100;
+                    
+                    icon.style.left = `${posXPercent}%`;
+                    icon.style.top = `${posYPercent}%`;
+                    icon.style.display = '';
+                    updatedChamps.add(p1.championName);
+                }
+            });
+
+            game.playerIconElements.forEach((icon, champName) => {
+                if (!updatedChamps.has(champName)) {
+                    icon.style.display = 'none';
+                }
+            });
+        }
+    };
+    
+    if (document.querySelectorAll('.sp-game-block').length > 0) {
+        animationManager.init();
+    }
+});
+</script>
+{% endblock %}

@@ -273,12 +273,12 @@
         {% elif not stats.is_overall_view %}
             <h2>Statistics for: {{ selected_team }}</h2>
             <div class="overall-stats-container" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 1.5rem;">
-                 <div class="stat-card"><h3>Total</h3><p class="stat-value">{{ stats.games_played }}</p> <p class="stat-label">Games</p>{% set team_wr = stats.wins / stats.games_played * 100 if stats.games_played else 0 %}<p class="stat-sublabel {{ 'stat-positive' if team_wr >= 50 else 'stat-negative' }}">{{ "%.1f"|format(team_wr) }}% WR</p><small>({{ stats.wins }}W - {{ stats.losses }}L)</small></div>
-                 <div class="stat-card stat-card-blue"><h3>Blue Side</h3><p class="stat-value">{{ stats.games_blue }}</p> <p class="stat-label">Games</p>{% set blue_wr = stats.wins_blue / stats.games_blue * 100 if stats.games_blue else 0 %}<p class="stat-sublabel {{ 'stat-positive' if blue_wr >= 50 else 'stat-negative' }}">{{ "%.1f"|format(blue_wr) }}% WR</p><small>({{ stats.wins_blue }}W - {{ stats.losses_blue }}L)</small></div>
-                 <div class="stat-card stat-card-red"><h3>Red Side</h3><p class="stat-value">{{ stats.games_red }}</p> <p class="stat-label">Games</p>{% set red_wr = stats.wins_red / stats.games_red * 100 if stats.games_red else 0 %}<p class="stat-sublabel {{ 'stat-positive' if red_wr >= 50 else 'stat-negative' }}">{{ "%.1f"|format(red_wr) }}% WR</p><small>({{ stats.wins_red }}W - {{ stats.losses_red }}L)</small></div>
+                <div class="stat-card"><h3>Total</h3><p class="stat-value">{{ stats.games_played }}</p> <p class="stat-label">Games</p>{% set team_wr = stats.wins / stats.games_played * 100 if stats.games_played else 0 %}<p class="stat-sublabel {{ 'stat-positive' if team_wr >= 50 else 'stat-negative' }}">{{ "%.1f"|format(team_wr) }}% WR</p><small>({{ stats.wins }}W - {{ stats.losses }}L)</small></div>
+                <div class="stat-card stat-card-blue"><h3>Blue Side</h3><p class="stat-value">{{ stats.games_blue }}</p> <p class="stat-label">Games</p>{% set blue_wr = stats.wins_blue / stats.games_blue * 100 if stats.games_blue else 0 %}<p class="stat-sublabel {{ 'stat-positive' if blue_wr >= 50 else 'stat-negative' }}">{{ "%.1f"|format(blue_wr) }}% WR</p><small>({{ stats.wins_blue }}W - {{ stats.losses_blue }}L)</small></div>
+                <div class="stat-card stat-card-red"><h3>Red Side</h3><p class="stat-value">{{ stats.games_red }}</p> <p class="stat-label">Games</p>{% set red_wr = stats.wins_red / stats.games_red * 100 if stats.games_red else 0 %}<p class="stat-sublabel {{ 'stat-positive' if red_wr >= 50 else 'stat-negative' }}">{{ "%.1f"|format(red_wr) }}% WR</p><small>({{ stats.wins_red }}W - {{ stats.losses_red }}L)</small></div>
             </div>
             <hr>
-             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;"><h3>Detailed Stats</h3><div class="side-filter-controls">Filter Side:<a href="{{ url_for('tournament', team=selected_team, side_filter='all') }}" class="button {% if selected_side_filter == 'all' %}active{% endif %}">All</a><a href="{{ url_for('tournament', team=selected_team, side_filter='blue') }}" class="button {% if selected_side_filter == 'blue' %}active{% endif %}">Blue</a><a href="{{ url_for('tournament', team=selected_team, side_filter='red') }}" class="button {% if selected_side_filter == 'red' %}active{% endif %}">Red</a></div></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;"><h3>Detailed Stats</h3><div class="side-filter-controls">Filter Side:<a href="{{ url_for('tournament', team=selected_team, side_filter='all') }}" class="button {% if selected_side_filter == 'all' %}active{% endif %}">All</a><a href="{{ url_for('tournament', team=selected_team, side_filter='blue') }}" class="button {% if selected_side_filter == 'blue' %}active{% endif %}">Blue</a><a href="{{ url_for('tournament', team=selected_team, side_filter='red') }}" class="button {% if selected_side_filter == 'red' %}active{% endif %}">Red</a></div></div>
 
             <h4>Picks <span style="font-size: 0.8em; color: var(--text-secondary);">({{ selected_side_filter | capitalize }} Side)</span></h4>
             <div class="player-stats-grid" style="margin-bottom: 1.5rem;">
@@ -308,93 +308,124 @@
                     </div>
                 {% endfor %}
             </div>
-            <hr>
 
-            <h4>Bans <span style="font-size: 0.8em; color: var(--text-secondary);">(Overall - Not Affected by Side Filter)</span></h4>
-             <div class="bans-grid-container table-responsive">
-                <div class="ban-table-block ban-block-blue-theme">
-                    <h5>Bans by {{ selected_team }} (Blue)</h5>
-                    {% set bans_list = stats.bans.by_team_blue_formatted %}
-                    {% if bans_list %}
-                        <div class="table-responsive-inner">
-                            <table class="player-champ-table">
-                                <thead><tr><th>Icon</th><th>Champion</th><th>Count</th></tr></thead>
-                                <tbody>
-                                    {% for ban in bans_list %}
-                                    <tr>
-                                        <td>{{ get_champion_icon_html(ban.champion, champion_data, 35, 35) | safe if champion_data else ban.champion[:3] }}</td>
-                                        <td>{{ ban.champion }}</td>
-                                        <td>{{ ban.count }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+            <h4>Detailed Picks by Rotation <span style="font-size: 0.8em; color: var(--text-secondary);">({{ selected_side_filter | capitalize }} Side)</span></h4>
+            <div class="detailed-picks-outer-container">
+                <div class="bans-group"> <h4 class="bans-group-title">Detailed Picks by Rotation <span style="font-size: 0.8em; color: var(--text-secondary);">({{ selected_side_filter | capitalize }} Side)</span></h4>
+                    <div class="bans-group-content">
+                        <div class="ban-table-block ban-block-blue-theme">
+                            <h5>1st Rot Picks (B)</h5>
+                            {% set picks_list = stats.get('detailed_picks', {}).get('blue_rot1', []) %}
+                            {% if picks_list %}
+                                <div class="table-responsive-inner">
+                                    <table class="player-champ-table compact-ban-table detailed-picks-table">
+                                        <thead><tr><th>Icon</th><th>Champion</th><th>Ct</th><th>WR%</th></tr></thead>
+                                        <tbody>
+                                            {% for pick in picks_list %}
+                                            <tr>
+                                                <td>{{ pick.icon_html | safe }}</td>
+                                                <td>{{ pick.champion }}</td>
+                                                <td>{{ pick.games }}</td>
+                                                <td class="{% if pick.win_rate >= 60 %}wr-high{% elif pick.win_rate <= 45 %}wr-low{% else %}wr-mid{% endif %}">{{ "%.1f"|format(pick.win_rate) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}<p class="notice notice-compact">No picks.</p>{% endif %}
                         </div>
-                    {% else %}<p class="notice">No bans recorded.</p>{% endif %}
-                </div>
-                <div class="ban-table-block ban-block-red-theme">
-                    <h5>Bans by {{ selected_team }} (Red)</h5>
-                    {% set bans_list = stats.bans.by_team_red_formatted %}
-                    {% if bans_list %}
-                        <div class="table-responsive-inner">
-                            <table class="player-champ-table">
-                                <thead><tr><th>Icon</th><th>Champion</th><th>Count</th></tr></thead>
-                                <tbody>
-                                    {% for ban in bans_list %}
-                                    <tr>
-                                        <td>{{ get_champion_icon_html(ban.champion, champion_data, 35, 35) | safe if champion_data else ban.champion[:3] }}</td>
-                                        <td>{{ ban.champion }}</td>
-                                        <td>{{ ban.count }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div class="ban-table-block ban-block-blue-theme">
+                            <h5>2nd Rot Picks (B)</h5>
+                            {% set picks_list = stats.get('detailed_picks', {}).get('blue_rot2', []) %}
+                            {% if picks_list %}
+                                <div class="table-responsive-inner">
+                                    <table class="player-champ-table compact-ban-table detailed-picks-table">
+                                        <thead><tr><th>Icon</th><th>Champion</th><th>Ct</th><th>WR%</th></tr></thead>
+                                        <tbody>
+                                            {% for pick in picks_list %}
+                                            <tr>
+                                                <td>{{ pick.icon_html | safe }}</td>
+                                                <td>{{ pick.champion }}</td>
+                                                <td>{{ pick.games }}</td>
+                                                <td class="{% if pick.win_rate >= 60 %}wr-high{% elif pick.win_rate <= 45 %}wr-low{% else %}wr-mid{% endif %}">{{ "%.1f"|format(pick.win_rate) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}<p class="notice notice-compact">No picks.</p>{% endif %}
                         </div>
-                    {% else %}<p class="notice">No bans recorded.</p>{% endif %}
-                </div>
-                <div class="ban-table-block ban-block-blue-theme">
-                    <h5>Bans vs {{ selected_team }} (when Blue)</h5>
-                    {% set bans_list = stats.bans.vs_team_blue_formatted %}
-                    {% if bans_list %}
-                        <div class="table-responsive-inner">
-                            <table class="player-champ-table">
-                                <thead><tr><th>Icon</th><th>Champion</th><th>Count</th></tr></thead>
-                                <tbody>
-                                    {% for ban in bans_list %}
-                                    <tr>
-                                        <td>{{ get_champion_icon_html(ban.champion, champion_data, 35, 35) | safe if champion_data else ban.champion[:3] }}</td>
-                                        <td>{{ ban.champion }}</td>
-                                        <td>{{ ban.count }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div class="ban-table-block ban-block-red-theme">
+                            <h5>1st Rot Picks (R)</h5>
+                            {% set picks_list = stats.get('detailed_picks', {}).get('red_rot1', []) %}
+                            {% if picks_list %}
+                                <div class="table-responsive-inner">
+                                    <table class="player-champ-table compact-ban-table detailed-picks-table">
+                                        <thead><tr><th>Icon</th><th>Champion</th><th>Ct</th><th>WR%</th></tr></thead>
+                                        <tbody>
+                                            {% for pick in picks_list %}
+                                            <tr>
+                                                <td>{{ pick.icon_html | safe }}</td>
+                                                <td>{{ pick.champion }}</td>
+                                                <td>{{ pick.games }}</td>
+                                                <td class="{% if pick.win_rate >= 60 %}wr-high{% elif pick.win_rate <= 45 %}wr-low{% else %}wr-mid{% endif %}">{{ "%.1f"|format(pick.win_rate) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}<p class="notice notice-compact">No picks.</p>{% endif %}
                         </div>
-                    {% else %}<p class="notice">No bans recorded.</p>{% endif %}
-                </div>
-                <div class="ban-table-block ban-block-red-theme">
-                    <h5>Bans vs {{ selected_team }} (when Red)</h5>
-                    {% set bans_list = stats.bans.vs_team_red_formatted %}
-                    {% if bans_list %}
-                        <div class="table-responsive-inner">
-                             <table class="player-champ-table">
-                                <thead><tr><th>Icon</th><th>Champion</th><th>Count</th></tr></thead>
-                                <tbody>
-                                    {% for ban in bans_list %}
-                                    <tr>
-                                        <td>{{ get_champion_icon_html(ban.champion, champion_data, 35, 35) | safe if champion_data else ban.champion[:3] }}</td>
-                                        <td>{{ ban.champion }}</td>
-                                        <td>{{ ban.count }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div class="ban-table-block ban-block-red-theme">
+                            <h5>2nd Rot Picks (R)</h5>
+                            {% set picks_list = stats.get('detailed_picks', {}).get('red_rot2', []) %}
+                            {% if picks_list %}
+                                <div class="table-responsive-inner">
+                                    <table class="player-champ-table compact-ban-table detailed-picks-table">
+                                        <thead><tr><th>Icon</th><th>Champion</th><th>Ct</th><th>WR%</th></tr></thead>
+                                        <tbody>
+                                            {% for pick in picks_list %}
+                                            <tr>
+                                                <td>{{ pick.icon_html | safe }}</td>
+                                                <td>{{ pick.champion }}</td>
+                                                <td>{{ pick.games }}</td>
+                                                <td class="{% if pick.win_rate >= 60 %}wr-high{% elif pick.win_rate <= 45 %}wr-low{% else %}wr-mid{% endif %}">{{ "%.1f"|format(pick.win_rate) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}<p class="notice notice-compact">No picks.</p>{% endif %}
                         </div>
-                    {% else %}<p class="notice">No bans recorded.</p>{% endif %}
+                    </div>
                 </div>
             </div>
+            
             <hr>
-
+            <h4>Bans <span style="font-size: 0.8em; color: var(--text-secondary);">(Overall - Not Affected by Side Filter)</span></h4>
+            <div class="bans-grid-container table-responsive">
+                <div class="bans-group">
+                    <h4 class="bans-group-title">{{ selected_team }}</h4>
+                    <div class="bans-group-content">
+                        <div class="ban-table-block ban-block-blue-theme"><h5>1st Rot by (B)</h5>{% set bans_list = stats.bans.by_team_blue_rot1_formatted %}{% if bans_list %}<div class="table-responsive-inner"><table class="player-champ-table compact-ban-table"><thead><tr><th>Icon</th><th>Champion</th><th>Ct</th></tr></thead><tbody>{% for ban in bans_list %}<tr><td>{{ ban.icon_html | safe }}</td><td>{{ ban.champion }}</td><td>{{ ban.count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="notice notice-compact">No bans.</p>{% endif %}</div>
+                        <div class="ban-table-block ban-block-blue-theme"><h5>2nd Rot by (B)</h5>{% set bans_list = stats.bans.by_team_blue_rot2_formatted %}{% if bans_list %}<div class="table-responsive-inner"><table class="player-champ-table compact-ban-table"><thead><tr><th>Icon</th><th>Champion</th><th>Ct</th></tr></thead><tbody>{% for ban in bans_list %}<tr><td>{{ ban.icon_html | safe }}</td><td>{{ ban.champion }}</td><td>{{ ban.count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="notice notice-compact">No bans.</p>{% endif %}</div>
+                        <div class="ban-table-block ban-block-red-theme"><h5>1st Rot by (R)</h5>{% set bans_list = stats.bans.by_team_red_rot1_formatted %}{% if bans_list %}<div class="table-responsive-inner"><table class="player-champ-table compact-ban-table"><thead><tr><th>Icon</th><th>Champion</th><th>Ct</th></tr></thead><tbody>{% for ban in bans_list %}<tr><td>{{ ban.icon_html | safe }}</td><td>{{ ban.champion }}</td><td>{{ ban.count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="notice notice-compact">No bans.</p>{% endif %}</div>
+                        <div class="ban-table-block ban-block-red-theme"><h5>2nd Rot by (R)</h5>{% set bans_list = stats.bans.by_team_red_rot2_formatted %}{% if bans_list %}<div class="table-responsive-inner"><table class="player-champ-table compact-ban-table"><thead><tr><th>Icon</th><th>Champion</th><th>Ct</th></tr></thead><tbody>{% for ban in bans_list %}<tr><td>{{ ban.icon_html | safe }}</td><td>{{ ban.champion }}</td><td>{{ ban.count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="notice notice-compact">No bans.</p>{% endif %}</div>
+                    </div>
+                </div>
+                <div class="bans-separator-vertical"></div>
+                <div class="bans-group">
+                    <h4 class="bans-group-title">Enemy</h4>
+                    <div class="bans-group-content">
+                        <div class="ban-table-block ban-block-blue-theme"><h5>1st Rot vs (B)</h5>{% set bans_list = stats.bans.vs_team_blue_rot1_formatted %}{% if bans_list %}<div class="table-responsive-inner"><table class="player-champ-table compact-ban-table"><thead><tr><th>Icon</th><th>Champion</th><th>Ct</th></tr></thead><tbody>{% for ban in bans_list %}<tr><td>{{ ban.icon_html | safe }}</td><td>{{ ban.champion }}</td><td>{{ ban.count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="notice notice-compact">No bans.</p>{% endif %}</div>
+                        <div class="ban-table-block ban-block-blue-theme"><h5>2nd Rot vs (B)</h5>{% set bans_list = stats.bans.vs_team_blue_rot2_formatted %}{% if bans_list %}<div class="table-responsive-inner"><table class="player-champ-table compact-ban-table"><thead><tr><th>Icon</th><th>Champion</th><th>Ct</th></tr></thead><tbody>{% for ban in bans_list %}<tr><td>{{ ban.icon_html | safe }}</td><td>{{ ban.champion }}</td><td>{{ ban.count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="notice notice-compact">No bans.</p>{% endif %}</div>
+                        <div class="ban-table-block ban-block-red-theme"><h5>1st Rot vs (R)</h5>{% set bans_list = stats.bans.vs_team_red_rot1_formatted %}{% if bans_list %}<div class="table-responsive-inner"><table class="player-champ-table compact-ban-table"><thead><tr><th>Icon</th><th>Champion</th><th>Ct</th></tr></thead><tbody>{% for ban in bans_list %}<tr><td>{{ ban.icon_html | safe }}</td><td>{{ ban.champion }}</td><td>{{ ban.count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="notice notice-compact">No bans.</p>{% endif %}</div>
+                        <div class="ban-table-block ban-block-red-theme"><h5>2nd Rot vs (R)</h5>{% set bans_list = stats.bans.vs_team_red_rot2_formatted %}{% if bans_list %}<div class="table-responsive-inner"><table class="player-champ-table compact-ban-table"><thead><tr><th>Icon</th><th>Champion</th><th>Ct</th></tr></thead><tbody>{% for ban in bans_list %}<tr><td>{{ ban.icon_html | safe }}</td><td>{{ ban.champion }}</td><td>{{ ban.count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="notice notice-compact">No bans.</p>{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
             <h4>Duo Picks <span style="font-size: 0.8em; color: var(--text-secondary);">({{ selected_side_filter | capitalize }} Side)</span></h4>
             <div class="duo-picks-grid">
                 {% if stats.duo_picks %}
@@ -425,6 +456,103 @@
             {% set has_duo_data = false %}
             {% if stats.duo_picks %}{% for group_data in stats.duo_picks.values() %}{% if group_data.stats %}{% set has_duo_data = true %}{% endif %}{% endfor %}{% endif %}
             {% if not has_duo_data %}<p class="notice">No duo pick data available for the selected side.</p>{% endif %}
+            
+            <hr>
+            <h4>Priority Picks</h4>
+            <div class="priority-picks-container">
+                {% set priority_data = stats.get('priority_picks', {}) %}
+                <div class="priority-picks-block">
+                    <h5>Blue Side Priority</h5>
+                    {% if priority_data.blue %}
+                    <div class="priority-filters">
+                        <span>Filter by Pick:</span>
+                        <button class="button priority-filter-btn active" data-target-table="blue-priority-table" data-phase="all">All</button>
+                        {% for phase in priority_data.blue_phases %}
+                            <button class="button priority-filter-btn" data-target-table="blue-priority-table" data-phase="{{ phase }}">{{ phase }}</button>
+                        {% endfor %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="player-champ-table priority-picks-table" id="blue-priority-table">
+                            <thead>
+                                <tr>
+                                    <th>Icon</th>
+                                    <th>Champion</th>
+                                    <th>Total</th>
+                                    {% for phase in priority_data.blue_phases %}
+                                    <th class="phase-col {{ phase }}">{{ phase }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set max_val = priority_data.blue_max_picks %}
+                                {% for champ_prio in priority_data.blue %}
+                                <tr data-phases='{{ champ_prio.phases | tojson | safe }}'>
+                                    <td>{{ champ_prio.icon_html | safe }}</td>
+                                    <td style="text-align: left;">{{ champ_prio.champion }}</td>
+                                    <td>{{ champ_prio.total_picks }}</td>
+                                    {% for phase in priority_data.blue_phases %}
+                                        {% set count = champ_prio.phases.get(phase, 0) %}
+                                        {% set opacity = (count / max_val) * 0.8 + 0.1 if max_val > 0 and count > 0 else 0 %}
+                                        <td class="phase-col {{ phase }}" style="background-color: rgba(0, 123, 255, {{ opacity }}); color: {{ '#ffffff' if opacity > 0.55 else 'var(--text-primary)' }};">
+                                            {{ count if count > 0 else '-' }}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="notice">No priority pick data available for Blue Side.</p>
+                    {% endif %}
+                </div>
+                <div class="priority-picks-block">
+                    <h5>Red Side Priority</h5>
+                    {% if priority_data.red %}
+                    <div class="priority-filters">
+                        <span>Filter by Pick:</span>
+                        <button class="button priority-filter-btn active" data-target-table="red-priority-table" data-phase="all">All</button>
+                        {% for phase in priority_data.red_phases %}
+                            <button class="button priority-filter-btn" data-target-table="red-priority-table" data-phase="{{ phase }}">{{ phase }}</button>
+                        {% endfor %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="player-champ-table priority-picks-table" id="red-priority-table">
+                            <thead>
+                                <tr>
+                                    <th>Icon</th>
+                                    <th>Champion</th>
+                                    <th>Total</th>
+                                    {% for phase in priority_data.red_phases %}
+                                    <th class="phase-col {{ phase }}">{{ phase }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set max_val = priority_data.red_max_picks %}
+                                {% for champ_prio in priority_data.red %}
+                                <tr data-phases='{{ champ_prio.phases | tojson | safe }}'>
+                                    <td>{{ champ_prio.icon_html | safe }}</td>
+                                    <td style="text-align: left;">{{ champ_prio.champion }}</td>
+                                    <td>{{ champ_prio.total_picks }}</td>
+                                    {% for phase in priority_data.red_phases %}
+                                        {% set count = champ_prio.phases.get(phase, 0) %}
+                                        {% set opacity = (count / max_val) * 0.8 + 0.1 if max_val > 0 and count > 0 else 0 %}
+                                        <td class="phase-col {{ phase }}" style="background-color: rgba(220, 53, 69, {{ opacity }}); color: {{ '#ffffff' if opacity > 0.55 else 'var(--text-primary)' }};">
+                                            {{ count if count > 0 else '-' }}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="notice">No priority pick data available for Red Side.</p>
+                    {% endif %}
+                </div>
+            </div>
+
             <hr>
 
             <h4>Draft Patterns <span style="font-size: 0.8em; color: var(--text-secondary);">(Calculated based on games played by {{ selected_team }})</span></h4>
@@ -611,142 +739,8 @@
                     <p class="notice">No matches found for {{ selected_team }} to display drafts.</p>
                 {% endif %}
             </div>
-             <hr>
+             
 
-            <h4>Player Positions</h4>
-            {% if all_game_details is defined and all_game_details %}
-                <div class="position-snapshots-section" style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; align-items: stretch; width: 100%; margin-top: 1rem;">
-                    {% for series_id, games_in_series in all_game_details | groupby('series_id') %}
-                        {% if games_in_series %}
-                             <div class="match-block position-snapshot-block">
-                                {% set game_example = games_in_series[0] %}
-                                {% set blue_team_name_display = team_tag_map.get(game_example.blue_team_tag, game_example.blue_team_tag) if team_tag_map else game_example.blue_team_tag %}
-                                {% set red_team_name_display = team_tag_map.get(game_example.red_team_tag, game_example.red_team_tag) if team_tag_map else game_example.red_team_tag %}
-                                <h5>{{ blue_team_name_display }} vs {{ red_team_name_display }} (Positions)</h5>
-                                <div class="game-buttons">
-                                    {% for game in games_in_series %}
-                                        <button class="button game-toggle-btn pos-toggle-btn" data-target="pos-game-content-{{ game.game_id }}">Game {{ loop.index }}</button>
-                                    {% endfor %}
-                                </div>
-                                <div class="match-game-content position-game-content">
-                                    {% for game in games_in_series %}
-                                        <div class="pos-game-content-wrapper hidden" id="pos-game-content-{{ game.game_id }}">
-                                            <div class="game-side-info" style="text-align: center; margin-bottom: 0.8rem; font-size: 0.9em; padding: 5px; background-color: rgba(0,0,0,0.1); border-radius: 3px;">
-                                                <strong style="color: #5dade2;">Blue:</strong> {{ team_tag_map.get(game.blue_team_tag, game.blue_team_tag) if team_tag_map else game.blue_team_tag }}
-                                                <span style="margin: 0 10px; color: var(--text-secondary);">vs</span>
-                                                <strong style="color: #e74c3c;">Red:</strong> {{ team_tag_map.get(game.red_team_tag, game.red_team_tag) if team_tag_map else game.red_team_tag }}
-                                                 <span style="margin-left: 15px;">Result: <strong class="{{ 'stat-positive' if game.is_win_for_selected else 'stat-negative' if game.winner_side != 'Unknown' else 'stat-neutral' }}">{{ 'Win' if game.is_win_for_selected else 'Loss' if game.winner_side != 'Unknown' else 'Unknown' }}</strong></span>
-                                            </div>
-                                            <div class="minimap-snapshots-container">
-                                                {% for ts in [40, 60, 80] %}
-                                                    <div class="minimap-snapshot-wrapper">
-                                                        <span class="minimap-timestamp-label">{{ "%d:%02d" | format((ts // 60), (ts % 60)) }}</span>
-                                                        <div class="minimap-snapshot" id="minimap-{{ game.game_id }}-{{ ts }}">
-                                                            {% set snapshot_data = game.position_snapshots.get(ts, []) %}
-                                                            {% if snapshot_data %}
-                                                                {% for player_pos in snapshot_data %}
-                                                                    {% set max_coord = 15000.0 %}
-                                                                    {% set pos_x_perc = (player_pos.x | float / max_coord) * 100 if max_coord > 0 else 50 %}
-                                                                    {% set pos_y_perc = (1 - (player_pos.z | float / max_coord)) * 100 if max_coord > 0 else 50 %}
-                                                                    {% set pos_x_perc = max(1.5, min(98.5, pos_x_perc)) %}
-                                                                    {% set pos_y_perc = max(1.5, min(98.5, pos_y_perc)) %}
-                                                                    {% set team_class = '' %}
-                                                                    {% if player_pos.teamId == 100 %} {% set team_class = 'team-blue' %}
-                                                                    {% elif player_pos.teamId == 200 %} {% set team_class = 'team-red' %}
-                                                                    {% elif player_pos.participantID is defined and player_pos.participantID is not none %}
-                                                                        {% set p_id = player_pos.participantID | int(-1) %}
-                                                                        {% if 1 <= p_id <= 5 %} {% set team_class = 'team-blue' %}
-                                                                        {% elif 6 <= p_id <= 10 %} {% set team_class = 'team-red' %}
-                                                                        {% endif %}
-                                                                    {% endif %}
-                                                                    <div class="player-position-wrapper {{ team_class }}"
-                                                                        style="left: {{ '%.2f'|format(pos_x_perc) }}%; top: {{ '%.2f'|format(pos_y_perc) }}%;">
-                                                                        {{ get_champion_icon_html(player_pos.championName, champion_data, 26, 26) | safe if champion_data }}
-                                                                    </div>
-                                                                {% endfor %}
-                                                            {% else %}
-                                                                 <p class="notice" style="text-align: center; font-size: 0.8em; padding-top: 40%;">No data for {{ "%d:%02d" | format((ts // 60), (ts % 60)) }}</p>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            {% else %}
-                 <p class="notice">No matches found for {{ selected_team }} to display position snapshots.</p>
-            {% endif %}
-            <hr>
-
-            {# --- НОВЫЙ РАЗДЕЛ: First Wards --- #}
-            <h4>First Wards</h4>
-            {% if all_game_details is defined and all_game_details %}
-                <div class="first-wards-section" style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; align-items: stretch; width: 100%; margin-top: 1rem;">
-                    {% for series_id, games_in_series in all_game_details | groupby('series_id') %}
-                        {% if games_in_series %}
-                             <div class="match-block first-ward-block"> {# Новый класс для JS и стилей #}
-                                {% set game_example = games_in_series[0] %}
-                                {% set blue_team_name_display = team_tag_map.get(game_example.blue_team_tag, game_example.blue_team_tag) if team_tag_map else game_example.blue_team_tag %}
-                                {% set red_team_name_display = team_tag_map.get(game_example.red_team_tag, game_example.red_team_tag) if team_tag_map else game_example.red_team_tag %}
-                                <h5>{{ blue_team_name_display }} vs {{ red_team_name_display }} (First Wards)</h5>
-
-                                <div class="game-buttons">
-                                    {% for game in games_in_series %}
-                                        <button class="button game-toggle-btn fw-toggle-btn" data-target="fw-game-content-{{ game.game_id }}">Game {{ loop.index }}</button>
-                                    {% endfor %}
-                                </div>
-
-                                <div class="match-game-content first-ward-game-content">
-                                    {% for game in games_in_series %}
-                                        <div class="fw-game-content-wrapper hidden" id="fw-game-content-{{ game.game_id }}">
-                                            <div class="game-side-info" style="text-align: center; margin-bottom: 0.8rem; font-size: 0.9em; padding: 5px; background-color: rgba(0,0,0,0.1); border-radius: 3px;">
-                                                <strong style="color: {{ '#007bff' if game.side == 'Blue' else '#dc3545' }};">{{ game.side }} Team:</strong> {{ selected_team }}
-                                                <span style="margin: 0 10px; color: var(--text-secondary);">vs</span>
-                                                Opponent: {{ team_tag_map.get(game.opponent_tag, game.opponent_name) if team_tag_map and game.opponent_tag else game.opponent_name or 'N/A' }}
-                                                 <span style="margin-left: 15px;">Result: <strong class="{{ 'stat-positive' if game.result == 'Win' else 'stat-negative' if game.result == 'Loss' else 'stat-neutral' }}">{{ game.result }}</strong></span>
-                                            </div>
-
-                                            <div class="minimap-snapshot first-ward-map" id="firstward-map-{{ game.game_id }}">
-                                                {% if game.first_wards %}
-                                                    {% for ward_info in game.first_wards %}
-                                                        {% set max_coord = 15000.0 %}
-                                                        {% set pos_x_perc = (ward_info.pos_x | float / max_coord) * 100 if max_coord > 0 else 50 %}
-                                                        {% set pos_y_perc = (1 - (ward_info.pos_z | float / max_coord)) * 100 if max_coord > 0 else 50 %}
-                                                        {% set pos_x_perc = max(2.5, min(97.5, pos_x_perc)) %} {# Clamp values slightly more for text #}
-                                                        {% set pos_y_perc = max(2.5, min(97.5, pos_y_perc)) %}
-
-                                                        {% set ward_team_class = 'team-blue' if game.side == 'Blue' else 'team-red' if game.side == 'Red' else 'team-unknown' %}
-
-                                                        <div class="ward-placement {{ ward_team_class }}"
-                                                             style="left: {{ '%.2f'|format(pos_x_perc) }}%; top: {{ '%.2f'|format(pos_y_perc) }}%;">
-                                                            <div class="ward-player-name">{{ ward_info.player_name or ward_info.champion_name or 'Player N/A' }}</div>
-                                                            <div class="ward-vision-circle"></div>
-                                                            <div class="ward-dot"></div>
-                                                            <div class="ward-timestamp">
-                                                                {{ "%d:%02d" | format((ward_info.timestamp_seconds // 60)|int, (ward_info.timestamp_seconds % 60)|int) }}
-                                                            </div>
-                                                        </div>
-                                                    {% endfor %}
-                                                {% else %}
-                                                    <p class="notice" style="text-align: center; font-size: 0.8em; padding-top: 40%;">No first ward data for selected team in this game.</p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            {% else %}
-                 <p class="notice">No matches found for {{ selected_team }} to display first wards.</p>
-            {% endif %}
-            {# --- КОНЕЦ БЛОКА First Wards --- #}
 
         {% endif %}
 
@@ -769,13 +763,12 @@
             const seriesBlocks = document.querySelectorAll(blockSelector);
             seriesBlocks.forEach(block => {
                 const toggleButtons = block.querySelectorAll(buttonSelector);
-                // Ищем обертки контента *внутри* текущего блока (серии)
                 const gameContentWrappers = block.querySelectorAll(`.${wrapperClassPrefix}-wrapper`);
 
                 toggleButtons.forEach(button => {
                     button.addEventListener('click', () => {
                         const targetId = button.dataset.target;
-                        const targetWrapper = block.querySelector(`#${targetId}`); // Ищем внутри блока
+                        const targetWrapper = block.querySelector(`#${targetId}`);
 
                         if (targetWrapper) {
                             gameContentWrappers.forEach(wrapper => wrapper.classList.add('hidden'));
@@ -789,18 +782,15 @@
                 });
 
                 if (toggleButtons.length > 0) {
-                    toggleButtons[0].click(); // Активируем первую игру по умолчанию
+                    toggleButtons[0].click();
                 } else {
                      gameContentWrappers.forEach(wrapper => wrapper.classList.add('hidden'));
                 }
             });
         }
 
-        // --- Инициализация для Драфтов ---
         initializeGameContentToggle('.match-block:not(.position-snapshot-block):not(.first-ward-block)', '.game-toggle-btn:not(.pos-toggle-btn):not(.fw-toggle-btn)', 'game-content', '.match-game-content');
-        // --- Инициализация для Снапшотов Позиций ---
         initializeGameContentToggle('.position-snapshot-block', '.pos-toggle-btn', 'pos-game-content', '.position-game-content');
-        // --- Инициализация для First Wards ---
         initializeGameContentToggle('.first-ward-block', '.fw-toggle-btn', 'fw-game-content', '.first-ward-game-content');
 
 
@@ -839,10 +829,36 @@
                          })
                          .forEach(sortedRow => tableBody.appendChild(sortedRow));
                  });
-
-                 
              });
         }
+        
+        // --- JS для фильтрации Priority Picks ---
+        document.querySelectorAll('.priority-filter-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetTableId = this.dataset.targetTable;
+                const phase = this.dataset.phase;
+                const table = document.getElementById(targetTableId);
+
+                // Управление активным состоянием кнопок
+                this.parentElement.querySelectorAll('.priority-filter-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                // Показываем/скрываем строки
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    if (phase === 'all') {
+                        row.style.display = ''; // Показываем все строки
+                    } else {
+                        const phasesData = JSON.parse(row.dataset.phases || '{}');
+                        // Показываем строку, если у нее есть пики в этой фазе
+                        if (phasesData[phase] && phasesData[phase] > 0) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
     });
 </script>
 {% endblock %}

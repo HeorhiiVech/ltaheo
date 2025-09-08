@@ -35,7 +35,7 @@ from scrims_logic import (
 from database import get_db_connection, TOURNAMENT_GAMES_HEADER
 
 # --- Constants ---
-TARGET_TOURNAMENT_ID = "826781"
+TARGET_TOURNAMENT_ID = "826767"
 TARGET_TOURNAMENT_NAME_FOR_DB = "HLL Split 3"
 MATCH_START_DATE_FILTER = "2025-04-03T00:00:00Z"
 TEAM_TAG_TO_FULL_NAME = {
@@ -75,6 +75,7 @@ WARD_TYPE_MAP = {
 }
 VALID_WARD_TYPES = set(WARD_TYPE_MAP.keys())
 
+# Rift Zones and Polygons (LEFT EMPTY)
 # Rift Zones and Polygons (LEFT EMPTY)
 rift_zones = [
     'Blue Side Raptor Brush', 'Blue Side Raptors (Inner)', 'Blue Side Raptors (Outer)',
@@ -1507,9 +1508,8 @@ def aggregate_tournament_data(selected_team_full_name=None, side_filter="all"):
         if not champion_data or not champion_data.get('id_map'):
              stats["error"] = "Failed to load champion data for icons."
         
-        # --- ИСПРАВЛЕННЫЙ БЛОК ---
         if is_overall_view:
-            # Логика для общего обзора турнира
+            # Логика для общего обзора турнира (без изменений)
             stats.update({
                 "overall_total_games": 0, "overall_blue_wins": 0, "overall_red_wins": 0,
                 "overall_champ_stats": defaultdict(lambda: {'picks': 0, 'bans': 0, 'wins_when_picked': 0}),
@@ -1611,22 +1611,44 @@ def aggregate_tournament_data(selected_team_full_name=None, side_filter="all"):
             stats["overall_duo_picks"] = dict(stats["overall_duo_picks"])
             del stats["overall_champ_stats"], stats["overall_picks_by_role"], stats["overall_bans_ids"], stats["temp_overall_duo_stats"]
         
-        else: # ВОССТАНОВЛЕННАЯ ЛОГИКА ДЛЯ ОДНОЙ КОМАНДЫ
+        else:
             stats.update({
                 "picks": defaultdict(lambda: defaultdict(lambda: {'games': 0, 'wins': 0})),
-                "bans": {"by_team_blue_formatted": [], "by_team_red_formatted": [], "vs_team_blue_formatted": [], "vs_team_red_formatted": []},
+                "bans": {},
                 "games_played": 0, "wins": 0, "losses": 0,
                 "duo_picks": defaultdict(lambda: {"title": "", "stats": []}),
                 "games_blue": 0, "wins_blue": 0, "losses_blue": 0,
                 "games_red": 0, "wins_red": 0, "losses_red": 0,
-                "draft_patterns": {'Blue': {}, 'Red': {}}
+                "draft_patterns": {'Blue': {}, 'Red': {}},
+                "detailed_picks": {},
+                "priority_picks": {}
             })
-            temp_bans_ids_team = { "by_team_blue": defaultdict(int), "by_team_red": defaultdict(int), "vs_team_blue": defaultdict(int), "vs_team_red": defaultdict(int) }
+            
+            temp_bans_ids_team = {
+                "by_team_blue_rot1": defaultdict(int), "by_team_blue_rot2": defaultdict(int),
+                "by_team_red_rot1": defaultdict(int), "by_team_red_rot2": defaultdict(int),
+                "vs_team_blue_rot1": defaultdict(int), "vs_team_blue_rot2": defaultdict(int),
+                "vs_team_red_rot1": defaultdict(int), "vs_team_red_rot2": defaultdict(int),
+            }
+            temp_detailed_picks = {
+                "blue_rot1": defaultdict(lambda: {'games': 0, 'wins': 0}),
+                "blue_rot2": defaultdict(lambda: {'games': 0, 'wins': 0}),
+                "red_rot1": defaultdict(lambda: {'games': 0, 'wins': 0}),
+                "red_rot2": defaultdict(lambda: {'games': 0, 'wins': 0})
+            }
+            temp_priority_picks = {
+                'Blue': defaultdict(lambda: defaultdict(int)),
+                'Red': defaultdict(lambda: defaultdict(int))
+            }
+
             temp_duo_stats_team = defaultdict(lambda: {'games': 0, 'wins': 0, 'roles': None})
             draft_patterns_counters = {'Blue': {k: defaultdict(int) for k in ['B1', 'B2_B3', 'B4_B5']}, 'Red': {k: defaultdict(int) for k in ['R1_R2', 'R3', 'R4', 'R5']}}
             games_played_on_blue_by_team = 0
             games_played_on_red_by_team = 0
             game_ids_for_team_view = []
+
+            blue_pick_seq_to_phase = { 7: 'B1', 10: 'B2-3', 11: 'B2-3', 18: 'B4-5', 19: 'B4-5' }
+            red_pick_seq_to_phase = { 8: 'R1-2', 9: 'R1-2', 12: 'R3', 17: 'R4', 20: 'R5' }
 
             for game_row in games_rows:
                 game = dict(game_row); game_db_id = game.get("Game_ID")
@@ -1654,14 +1676,25 @@ def aggregate_tournament_data(selected_team_full_name=None, side_filter="all"):
 
                 current_team_prefix = "Blue" if is_blue else "Red"
                 opponent_prefix = "Red" if is_blue else "Blue"
+                
+                ban_keys = {
+                    "team_rot1": temp_bans_ids_team["by_team_blue_rot1"] if is_blue else temp_bans_ids_team["by_team_red_rot1"],
+                    "team_rot2": temp_bans_ids_team["by_team_blue_rot2"] if is_blue else temp_bans_ids_team["by_team_red_rot2"],
+                    "opp_rot1": temp_bans_ids_team["vs_team_blue_rot1"] if is_blue else temp_bans_ids_team["vs_team_red_rot1"],
+                    "opp_rot2": temp_bans_ids_team["vs_team_blue_rot2"] if is_blue else temp_bans_ids_team["vs_team_red_rot2"],
+                }
 
-                ban_list_team = [game.get(f"{current_team_prefix}_Ban_{i}_ID") for i in range(1,6) if game.get(f"{current_team_prefix}_Ban_{i}_ID", "N/A") != "N/A"]
-                ban_list_opponent = [game.get(f"{opponent_prefix}_Ban_{i}_ID") for i in range(1,6) if game.get(f"{opponent_prefix}_Ban_{i}_ID", "N/A") != "N/A"]
-
-                target_ban_by_dict = temp_bans_ids_team["by_team_blue"] if is_blue else temp_bans_ids_team["by_team_red"]
-                target_ban_vs_dict = temp_bans_ids_team["vs_team_blue"] if is_blue else temp_bans_ids_team["vs_team_red"]
-                for b_id in ban_list_team: target_ban_by_dict[b_id] +=1
-                for b_id in ban_list_opponent: target_ban_vs_dict[b_id] +=1
+                for i in range(1, 6):
+                    team_ban_id = game.get(f"{current_team_prefix}_Ban_{i}_ID")
+                    opp_ban_id = game.get(f"{opponent_prefix}_Ban_{i}_ID")
+                    
+                    if team_ban_id and team_ban_id != "N/A":
+                        target_dict = ban_keys["team_rot1"] if i <= 3 else ban_keys["team_rot2"]
+                        target_dict[team_ban_id] += 1
+                    
+                    if opp_ban_id and opp_ban_id != "N/A":
+                        target_dict = ban_keys["opp_rot1"] if i <= 3 else ban_keys["opp_rot2"]
+                        target_dict[opp_ban_id] += 1
 
                 should_process_this_game_picks = (filter_side_norm == 'all') or \
                                                  (filter_side_norm == 'blue' and is_blue) or \
@@ -1694,13 +1727,47 @@ def aggregate_tournament_data(selected_team_full_name=None, side_filter="all"):
                         reconstructed_draft[i] = {
                             "Action_Type": str(action_type).lower(), "Drafter_Team_ID": str(team_id_draft),
                             "Champion_Name": game.get(f"Draft_Action_{i}_ChampName", "N/A"),
-                            "Champion_ID": game.get(f"Draft_Action_{i}_ChampID", "N/A")
                         }
                         action_found_in_game = True
                         if not draft_blue_id and i in [1,3,5,7,10,11,14,16,18,19]: draft_blue_id = str(team_id_draft)
                         if not draft_red_id and i in [2,4,6,8,9,12,13,15,17,20] and str(team_id_draft) != draft_blue_id: draft_red_id = str(team_id_draft)
 
                 if action_found_in_game:
+                    blue_picks_seq = {s: reconstructed_draft[s] for s in [7, 10, 11, 18, 19] if s in reconstructed_draft}
+                    red_picks_seq = {s: reconstructed_draft[s] for s in [8, 9, 12, 17, 20] if s in reconstructed_draft}
+                    
+                    our_team_picks_seq = blue_picks_seq if is_blue else red_picks_seq
+                    
+                    if should_process_this_game_picks:
+                        rot1_keys = [7, 10, 11] if is_blue else [8, 9, 12]
+                        rot2_keys = [18, 19] if is_blue else [17, 20]
+                        target_pick_dict_rot1 = temp_detailed_picks['blue_rot1'] if is_blue else temp_detailed_picks['red_rot1']
+                        target_pick_dict_rot2 = temp_detailed_picks['blue_rot2'] if is_blue else temp_detailed_picks['red_rot2']
+                        
+                        for seq, pick_data in our_team_picks_seq.items():
+                            champ_name = pick_data.get("Champion_Name")
+                            if champ_name and champ_name != "N/A":
+                                if seq in rot1_keys:
+                                    target_pick_dict_rot1[champ_name]['games'] += 1
+                                    if is_win: target_pick_dict_rot1[champ_name]['wins'] += 1
+                                elif seq in rot2_keys:
+                                    target_pick_dict_rot2[champ_name]['games'] += 1
+                                    if is_win: target_pick_dict_rot2[champ_name]['wins'] += 1
+
+                    if is_blue:
+                        for seq, pick_data in blue_picks_seq.items():
+                            champ = pick_data.get("Champion_Name")
+                            phase = blue_pick_seq_to_phase.get(seq)
+                            if champ and champ != "N/A" and phase:
+                                temp_priority_picks['Blue'][champ][phase] += 1
+                    elif is_red:
+                        for seq, pick_data in red_picks_seq.items():
+                            champ = pick_data.get("Champion_Name")
+                            phase = red_pick_seq_to_phase.get(seq)
+                            if champ and champ != "N/A" and phase:
+                                temp_priority_picks['Red'][champ][phase] += 1
+
+
                     roles_played_game = {'Blue': {}, 'Red': {}}
                     for r in ROLE_ORDER_FOR_SHEET:
                         r_abbr = role_to_abbr.get(r)
@@ -1850,11 +1917,67 @@ def aggregate_tournament_data(selected_team_full_name=None, side_filter="all"):
                             'icon_html': get_champion_icon_html(champ_name, champion_data, ICON_SIZE_PICKS_BANS,ICON_SIZE_PICKS_BANS)
                         }
             stats["picks"] = dict(formatted_picks_team)
+            
+            stats["bans"] = {
+                "by_team_blue_rot1_formatted": format_bans_agg(temp_bans_ids_team["by_team_blue_rot1"], champion_data, ICON_SIZE_PICKS_BANS),
+                "by_team_blue_rot2_formatted": format_bans_agg(temp_bans_ids_team["by_team_blue_rot2"], champion_data, ICON_SIZE_PICKS_BANS),
+                "by_team_red_rot1_formatted": format_bans_agg(temp_bans_ids_team["by_team_red_rot1"], champion_data, ICON_SIZE_PICKS_BANS),
+                "by_team_red_rot2_formatted": format_bans_agg(temp_bans_ids_team["by_team_red_rot2"], champion_data, ICON_SIZE_PICKS_BANS),
+                "vs_team_blue_rot1_formatted": format_bans_agg(temp_bans_ids_team["vs_team_blue_rot1"], champion_data, ICON_SIZE_PICKS_BANS),
+                "vs_team_blue_rot2_formatted": format_bans_agg(temp_bans_ids_team["vs_team_blue_rot2"], champion_data, ICON_SIZE_PICKS_BANS),
+                "vs_team_red_rot1_formatted": format_bans_agg(temp_bans_ids_team["vs_team_red_rot1"], champion_data, ICON_SIZE_PICKS_BANS),
+                "vs_team_red_rot2_formatted": format_bans_agg(temp_bans_ids_team["vs_team_red_rot2"], champion_data, ICON_SIZE_PICKS_BANS),
+            }
+            
+            def format_detailed_picks(picks_dict):
+                formatted_list = []
+                for champ, data in sorted(picks_dict.items(), key=lambda x: x[1]['games'], reverse=True):
+                    if data['games'] > 0:
+                        win_r = (data['wins'] / data['games'] * 100)
+                        formatted_list.append({
+                            "champion": champ, "games": data['games'], "win_rate": round(win_r,1),
+                            "icon_html": get_champion_icon_html(champ, champion_data, ICON_SIZE_PICKS_BANS, ICON_SIZE_PICKS_BANS)
+                        })
+                return formatted_list
 
-            stats["bans"]["by_team_blue_formatted"] = format_bans_agg(temp_bans_ids_team["by_team_blue"], champion_data, ICON_SIZE_PICKS_BANS)
-            stats["bans"]["by_team_red_formatted"] = format_bans_agg(temp_bans_ids_team["by_team_red"], champion_data, ICON_SIZE_PICKS_BANS)
-            stats["bans"]["vs_team_blue_formatted"] = format_bans_agg(temp_bans_ids_team["vs_team_blue"], champion_data, ICON_SIZE_PICKS_BANS)
-            stats["bans"]["vs_team_red_formatted"] = format_bans_agg(temp_bans_ids_team["vs_team_red"], champion_data, ICON_SIZE_PICKS_BANS)
+            stats["detailed_picks"] = {
+                "blue_rot1": format_detailed_picks(temp_detailed_picks["blue_rot1"]),
+                "blue_rot2": format_detailed_picks(temp_detailed_picks["blue_rot2"]),
+                "red_rot1": format_detailed_picks(temp_detailed_picks["red_rot1"]),
+                "red_rot2": format_detailed_picks(temp_detailed_picks["red_rot2"]),
+            }
+            
+            def format_priority_picks(priority_dict):
+                 priority_list = []
+                 max_picks_in_phase = 0
+                 for champ, phase_counts in priority_dict.items():
+                     current_max = max(phase_counts.values()) if phase_counts else 0
+                     if current_max > max_picks_in_phase:
+                         max_picks_in_phase = current_max
+
+                 for champ, phase_counts in priority_dict.items():
+                     total_picks = sum(phase_counts.values())
+                     entry = {
+                         "champion": champ,
+                         "total_picks": total_picks,
+                         "icon_html": get_champion_icon_html(champ, champion_data, ICON_SIZE_PICKS_BANS, ICON_SIZE_PICKS_BANS),
+                         "phases": {phase: count for phase, count in phase_counts.items()}
+                     }
+                     priority_list.append(entry)
+                 
+                 return sorted(priority_list, key=lambda x: x['total_picks'], reverse=True), max_picks_in_phase if max_picks_in_phase > 0 else 1
+
+            blue_prio_list, blue_max_val = format_priority_picks(temp_priority_picks["Blue"])
+            red_prio_list, red_max_val = format_priority_picks(temp_priority_picks["Red"])
+
+            stats["priority_picks"] = {
+                "blue": blue_prio_list,
+                "red": red_prio_list,
+                "blue_max_picks": blue_max_val,
+                "red_max_picks": red_max_val,
+                "blue_phases": sorted(list(set(blue_pick_seq_to_phase.values())), key=lambda x: int(x.split('-')[0][1:])),
+                "red_phases": sorted(list(set(red_pick_seq_to_phase.values())), key=lambda x: int(x.split('-')[0][1:])),
+            }
 
             for (r1_cfg, r2_cfg), duo_title_cfg in duo_roles_config.items():
                  stats["duo_picks"][duo_title_cfg]["title"] = duo_title_cfg
@@ -1889,19 +2012,17 @@ def aggregate_tournament_data(selected_team_full_name=None, side_filter="all"):
                             percentage = round((count / games_on_side_count) * 100)
                             stats['draft_patterns'][side_color][display_name][role_name_pattern] = percentage
             
-            # Сортировка и группировка матчей
             grouped_matches = defaultdict(list)
             for detail in all_game_details_list:
                 grouped_matches[detail["series_id"]].append(detail)
             
             all_game_details_list_sorted = []
-            # Сортируем серии по дате первой игры в серии (самые новые сначала)
             sorted_series_ids = sorted(grouped_matches.keys(), key=lambda s_id: grouped_matches[s_id][0].get('game_id', ''), reverse=True)
 
             sorted_grouped_matches = {}
             for series_id in sorted_series_ids:
                 games_in_series = grouped_matches[series_id]
-                games_in_series.sort(key=lambda g: g.get('sequence_number', 0)) # Игры внутри серии по порядку
+                games_in_series.sort(key=lambda g: g.get('sequence_number', 0))
                 sorted_grouped_matches[series_id] = games_in_series
                 all_game_details_list_sorted.extend(games_in_series)
 

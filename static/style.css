@@ -1029,3 +1029,162 @@ select {
      border-color: rgba(241, 148, 138, 0.6);
      box-shadow: 0 0 3px rgba(231, 76, 60, 1.0);
 }
+
+/* --- Стили для компактного отображения банов и пиков по ротациям --- */
+/* =================================================================== */
+/* СТИЛИ ДЛЯ ДЕТАЛЬНЫХ БАНОВ И ПИКОВ                     */
+/* =================================================================== */
+
+/* --- Контейнер для блоков в одну линию (Баны и Детальные Пики) --- */
+.bans-grid-container,
+.detailed-picks-container {
+    display: flex;
+    justify-content: center; /* Центрируем содержимое */
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+/* Группа из 4-х таблиц */
+.bans-group {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0; 
+}
+
+/* Заголовок группы ("LOUD" или "Enemy") */
+.bans-group-title {
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text-headings);
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Контейнер для 4-х таблиц внутри группы */
+.bans-group-content {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+}
+
+/* Отдельный блок с таблицей (и для банов, и для пиков) */
+.ban-table-block {
+    flex: 1;
+    padding: 0.5rem;
+    background-color: var(--bg-dark-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    /* <<< ИЗМЕНЕНИЕ: Возвращаем толщину для боковой полоски */
+    border-left-width: 4px;
+}
+
+/* <<< ИЗМЕНЕНИЕ: Возвращаем классы для цвета полоски */
+.ban-block-blue-theme {
+    border-left-color: #007bff;
+}
+.ban-block-red-theme {
+    border-left-color: #dc3545;
+}
+
+/* Ширина для блоков банов */
+.bans-grid-container .ban-table-block {
+    min-width: 180px; 
+}
+
+/* Ширина для блоков пиков */
+.detailed-picks-container .ban-table-block {
+    min-width: 195px;
+}
+
+.ban-table-block h5 {
+    font-size: 0.75em;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+/* Вертикальный разделитель */
+.bans-separator-vertical {
+    width: 2px;
+    background-color: var(--border-color);
+    flex-shrink: 0;
+    margin: 0 0.5rem;
+}
+
+/* Стили для компактных таблиц (общие) */
+.compact-ban-table {
+    font-size: 0.8em;
+}
+.compact-ban-table th, .compact-ban-table td { padding: 3px 4px; }
+.compact-ban-table th:nth-child(1), .compact-ban-table td:nth-child(1) { width: 38px; }
+.compact-ban-table th:nth-child(2), .compact-ban-table td:nth-child(2) { text-align: left; padding-left: 5px; }
+.compact-ban-table th:nth-child(3), .compact-ban-table td:nth-child(3) { width: 35px; }
+.detailed-picks-table th:nth-child(4), .detailed-picks-table td:nth-child(4) { width: 50px; }
+.notice.notice-compact { font-size: 0.9em; padding: 5px 0; text-align: center; margin-top: 0; }
+
+
+/* =================================================================== */
+/* СТИЛИ ДЛЯ PRIORITY PICKS (без изменений)                        */
+/* =================================================================== */
+.priority-picks-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+.priority-picks-block {
+    background-color: var(--bg-dark-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+}
+.priority-picks-block h5 {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.priority-filters { margin-bottom: 1rem; text-align: center; }
+.priority-filters span { margin-right: 0.5rem; font-weight: 500; color: var(--text-secondary); }
+.priority-filter-btn {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+    margin: 2px;
+    background-color: var(--bg-dark-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+.priority-filter-btn.active, .priority-filter-btn:hover {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--text-headings);
+    opacity: 1;
+}
+.priority-picks-block .table-responsive {
+    max-height: 420px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-dark-tertiary) var(--bg-dark-secondary);
+}
+.priority-picks-block .table-responsive::-webkit-scrollbar { width: 8px; }
+.priority-picks-block .table-responsive::-webkit-scrollbar-track { background: var(--bg-dark-secondary); }
+.priority-picks-block .table-responsive::-webkit-scrollbar-thumb {
+    background-color: var(--bg-dark-tertiary);
+    border-radius: 4px;
+    border: 2px solid var(--bg-dark-secondary);
+}
+.priority-picks-table th, .priority-picks-table td { padding: 6px 4px; font-size: 0.85em; transition: background-color 0.2s; }
+.priority-picks-table td[style*="rgba"] { color: var(--text-primary); }
+.priority-picks-table td[style*="0.5)"], .priority-picks-table td[style*="0.6)"], .priority-picks-table td[style*="0.7)"], .priority-picks-table td[style*="0.8)"], .priority-picks-table td[style*="0.9)"] {
+    color: #ffffff;
+    font-weight: 500;
+}
+.priority-picks-table th.phase-col, .priority-picks-table td.phase-col { width: 50px; text-align: center; font-weight: 500; }
+.priority-picks-table th:nth-child(3), .priority-picks-table td:nth-child(3) { width: 55px; font-weight: 600; }
