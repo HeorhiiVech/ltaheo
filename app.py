@@ -44,6 +44,9 @@ from soloq_logic import (
 )
 # <<< НОВЫЙ ИМПОРТ
 from start_positions_logic import get_start_positions_data
+# <<< НОВЫЙ ИМПОРТ ДЛЯ JNG CLEAR
+from jng_clear_logic import get_jng_clear_data
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "a_default_secret_key_change_me")
@@ -112,6 +115,35 @@ def update_hll_route():
     if added_games > 0: flash(f"Added/Updated {added_games} game(s) for {tournament_name_for_flash}!", "success")
     elif added_games == 0: flash(f"No new games found or updated for {tournament_name_for_flash}.", "info")
     return redirect(request.referrer or url_for('tournament'))
+
+# <<< НОВЫЙ МАРШРУТ ДЛЯ JNG CLEAR ---
+@app.route('/jng_clear')
+def jng_clear():
+    selected_team = request.args.get('team')
+    selected_champion = request.args.get('champion', 'All')
+
+    all_teams, stats, available_champions = [], {}, []
+    try:
+        all_teams, stats, available_champions = get_jng_clear_data(
+            selected_team_full_name=selected_team,
+            selected_champion=selected_champion
+        )
+    except Exception as e:
+        log_message(f"Error in /jng_clear data aggregation: {e}")
+        import traceback
+        log_message(traceback.format_exc())
+        flash(f"Error loading jungle clear data: {e}", "error")
+        stats = {"error": "Failed to load jungle clear data."}
+
+    return render_template(
+        'jng_clear.html',
+        all_teams=all_teams,
+        selected_team=selected_team,
+        available_champions=available_champions,
+        selected_champion=selected_champion,
+        stats=stats
+    )
+# --- КОНЕЦ НОВОГО МАРШРУТА ---
 
 @app.route('/wards')
 def wards():
@@ -187,7 +219,6 @@ def proximity():
         players_in_role=players_in_role
     )
 
-# --- НОВЫЙ МАРШРУТ ДЛЯ START POSITIONS ---
 @app.route('/start_positions')
 def start_positions():
     selected_team = request.args.get('team')
@@ -220,8 +251,6 @@ def start_positions():
         selected_champion=selected_champion,
         stats=stats
     )
-# --- КОНЕЦ НОВОГО МАРШРУТА ---
-
 
 @app.route('/soloq')
 def soloq():

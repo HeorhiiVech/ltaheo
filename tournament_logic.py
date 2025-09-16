@@ -591,6 +591,7 @@ rift_zone_polygons_list = [
     Polygon([(442 * 30, 296 * 30), (443 * 30, 325 * 30), (478 * 30, 328 * 30), (478 * 30, 295 * 30)]),
 ]
 
+
 ZONE_POLYGONS = {}
 LANE_ZONE_NAMES = []
 if SHAPELY_AVAILABLE:
@@ -827,7 +828,6 @@ def process_livestats_content(conn, livestats_content_str, jungler_puuid, game_i
     first_camp_cleared = False
     first_recall_after_camp_detected = False
 
-    # !!! ИЗМЕНЕНИЕ: Используем переданное соединение 'conn' вместо создания нового
     cursor = conn.cursor()
     try:
         cursor.execute('SELECT Blue_JGL_PUUID, Red_JGL_PUUID FROM tournament_games WHERE "Game_ID" = ?', (str(game_id),))
@@ -838,7 +838,7 @@ def process_livestats_content(conn, livestats_content_str, jungler_puuid, game_i
     except sqlite3.Error as e:
         log_message(f"Error getting team side for G:{game_id}, P:{jungler_puuid[:8]}: {e}")
     finally:
-        if cursor: cursor.close() # Закрываем только курсор, не соединение
+        if cursor: cursor.close()
 
     try: lines = livestats_content_str.strip().split('\n')
     except Exception as split_err: log_message(f"Error splitting lines G:{game_id}: {split_err}"); return None
@@ -888,9 +888,11 @@ def process_livestats_content(conn, livestats_content_str, jungler_puuid, game_i
                                     elif "Mid" in last_known_zone: lane_name = "Mid"
                                     elif "Bot" in last_known_zone: lane_name = "Bot"
                                     action_gank = f"Gank/Save {lane_name}"
-                                    if not path_sequence or path_sequence[-1] != action_gank:
-                                        path_sequence.append(action_gank)
-                                        last_action = action_gank
+                                    # ИЗМЕНЕНИЕ: Сохраняем как объект
+                                    gank_action_obj = {"action": action_gank, "time": game_time_sec}
+                                    if not path_sequence or path_sequence[-1].get("action") != action_gank:
+                                        path_sequence.append(gank_action_obj)
+                                        last_action = gank_action_obj
                             last_known_zone = current_zone
                             time_entered_zone = game_time_sec
                     break
@@ -901,7 +903,8 @@ def process_livestats_content(conn, livestats_content_str, jungler_puuid, game_i
                 pos = snapshot.get("position")
                 if monster_type and pos and 'x' in pos and 'z' in pos:
                      action_camp = get_monster_details(monster_type, pos['x'], pos['z'], jungler_team_side)
-                     current_action = action_camp
+                     # ИЗМЕНЕНИЕ: Сохраняем как объект с действием и временем
+                     current_action = {"action": action_camp, "time": game_time_sec}
                      if game_time_sec <= last_kill_event_time + 0.5: current_action = None
                      else:
                          last_kill_event_time = game_time_sec
@@ -909,14 +912,17 @@ def process_livestats_content(conn, livestats_content_str, jungler_puuid, game_i
         elif schema == "channeling_started" and snapshot.get("channelingType") == "recall":
              p_id = snapshot.get("participantID")
              if p_id == jungler_participant_id:
-                 current_action = "Recall"
+                 # ИЗМЕНЕНИЕ: Сохраняем как объект
+                 current_action = {"action": "Recall", "time": game_time_sec}
                  if game_time_sec <= last_recall_event_time + 1.0: current_action = None
                  else:
                      last_recall_event_time = game_time_sec
                      if first_camp_cleared: first_recall_after_camp_detected = True
 
         if current_action:
-            if not path_sequence or current_action != last_action:
+            # ИЗМЕНЕНИЕ: Сравниваем по ключу 'action' в словаре
+            last_action_name = last_action.get("action") if isinstance(last_action, dict) else last_action
+            if not path_sequence or current_action.get("action") != last_action_name:
                 path_sequence.append(current_action)
                 last_action = current_action
     return list(path_sequence)

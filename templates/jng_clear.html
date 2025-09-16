@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Jungle Clear Patterns{% endblock %}
+
+{% block content %}
+<style>
+    /*
+    ============================================
+    --- Стили для страницы JNG Clear (v3.3) ---
+    ============================================
+    */
+
+    /* --- Основной контейнер и блоки сайдов --- */
+    .jng-clear-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    .side-block {
+        background-color: var(--bg-dark-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    .side-header {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .blue-side .side-header { color: #5dade2; }
+    .red-side .side-header { color: #e74c3c; }
+
+    /* --- Сетка для чемпионов и основной статистики --- */
+    .jng-data-grid {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 2.5rem;
+        align-items: flex-start;
+    }
+    .champion-picks-block h4, .clear-path-block h4 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* --- Таблица чемпионов --- */
+    .champ-picks-table {
+        width: 100%;
+        font-size: 0.85em;
+    }
+    .champ-picks-table th, .champ-picks-table td {
+        padding: 8px 5px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+    .champ-picks-table tr:last-child td { border-bottom: none; }
+    .champ-picks-table td:nth-child(1) { width: 40px; }
+    .champ-picks-table th { font-size: 0.9em; color: var(--text-secondary); }
+    .champ-picks-table td:nth-child(3), .champ-picks-table th:nth-child(3) { text-align: center; }
+    .champ-picks-table td:nth-child(4), .champ-picks-table th:nth-child(4) { text-align: center; }
+
+    /* --- ИЗМЕНЕНИЕ: Блок с таймерами и дельтами --- */
+    .timers-block {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 0.8rem; /* Уменьшен отступ */
+    }
+    .timer-item .label {
+        font-size: 0.7rem; /* Уменьшен шрифт */
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        white-space: nowrap; /* Запрет переноса */
+    }
+    .timer-item .time {
+        font-size: 1.6rem; /* Уменьшен шрифт */
+        font-weight: 600;
+        color: var(--text-headings);
+        font-family: monospace;
+    }
+    .delta-item {
+        padding-top: 1.5rem; /* Скорректирован отступ */
+    }
+    .delta-item .delta-label {
+        font-size: 0.65rem; /* Уменьшен шрифт */
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        display: block;
+        white-space: nowrap; /* Запрет переноса */
+    }
+    .delta-item .delta-time {
+        font-size: 1.4rem; /* Уменьшен шрифт */
+        font-weight: 700;
+    }
+    .blue-side .delta-time { color: var(--stat-positive); }
+    .red-side .delta-time { color: var(--stat-positive); }
+
+
+    /* --- Таблица с детальной зачисткой --- */
+    .clear-details-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8em;
+    }
+    .clear-details-table th, .clear-details-table td {
+        border: 1px solid var(--border-color);
+        padding: 4px 6px;
+        text-align: center;
+    }
+    .clear-details-table thead th {
+        background-color: var(--bg-dark-tertiary);
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .clear-details-table th:first-child, .clear-details-table td:first-child {
+        text-align: left;
+        background-color: var(--bg-dark-tertiary);
+        font-weight: bold;
+        width: 100px;
+    }
+    .clear-details-table .camp-cell-content {
+        line-height: 1.3;
+    }
+    .clear-details-table .camp-cell-content .perc { font-weight: 700; color: var(--text-primary); }
+    .clear-details-table .camp-cell-content .time { font-size: 0.9em; color: var(--text-secondary); }
+
+    /* Адаптивность */
+    @media (max-width: 1200px) {
+        .jng-data-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="header-controls">
+    <h1>Jungle Clear Patterns</h1>
+    <div class="controls">
+        <form method="get" class="filter-form" action="{{ url_for('jng_clear') }}">
+            <div class="filter-group">
+                <label for="team_select">Team:</label>
+                <select name="team" id="team_select" onchange="this.form.submit()">
+                    <option value="">-- Select Team --</option>
+                    {% for team_display_name in all_teams %}
+                        <option value="{{ team_display_name }}" {% if team_display_name == selected_team %}selected{% endif %}>
+                            {{ team_display_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="champion_select">Champion:</label>
+                <select name="champion" id="champion_select" onchange="this.form.submit()">
+                    {% for champ in available_champions %}
+                        <option value="{{ champ }}" {% if champ == selected_champion %}selected{% endif %}>{{ champ }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <noscript><button type="submit" class="button">Apply Filter</button></noscript>
+        </form>
+    </div>
+</div>
+<hr>
+
+{% if stats.error %}
+    <p class="notice error-message">{{ stats.error }}</p>
+{% elif stats.message %}
+    <p class="notice">{{ stats.message }}</p>
+{% elif selected_team %}
+    <div class="jng-clear-container">
+        
+        {% macro render_side(side_data, side_name) %}
+            {% if side_data %}
+            <div class="jng-data-grid">
+                <div class="champion-picks-block">
+                    <h4>CHAMPION PICKS ({{ side_data.champions|length }})</h4>
+                    {% if side_data.champions %}
+                    <div class="table-responsive">
+                        <table class="player-champ-table">
+                            <thead><tr><th></th><th>Champion</th><th>#</th><th>WR%</th></tr></thead>
+                            <tbody>
+                                {% for champ in side_data.champions %}
+                                <tr>
+                                    <td>{{ champ.icon | safe }}</td>
+                                    <td>{{ champ.name }}</td>
+                                    <td>{{ champ.games }}</td>
+                                    <td class="{% if champ.winrate >= 55 %}wr-high{% elif champ.winrate <= 45 %}wr-low{% else %}wr-mid{% endif %}">{{ champ.winrate }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="clear-path-block">
+                    <div class="timers-block">
+                        {% set delta_labels = ["2nd-1st", "3rd-2nd", "4th-3rd", "5th-4th", "6th-5th", "7th-6th"] %}
+                        {% for i in range(7) %}
+                            <div class="timer-item">
+                                <div class="label">{{ i+1 }}st Camp Timer</div>
+                                <div class="time">{{ side_data.overall_timers[i] or '-:--' }}</div>
+                            </div>
+
+                            {% if not loop.last and side_data.overall_deltas[i] %}
+                            <div class="delta-item">
+                                 <div class="delta-label">Delta {{ delta_labels[i] }}</div>
+                                 <div class="delta-time">{{ side_data.overall_deltas[i] }}</div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="clear-details-table">
+                            <thead>
+                                <tr>
+                                    <th>Camp</th>
+                                    <th>1st</th><th>2nd</th><th>3rd</th><th>4th</th>
+                                    <th>5th</th><th>6th</th><th>7th</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for camp_name in side_data.all_camp_names %}
+                                <tr>
+                                    <td>{{ camp_name }}</td>
+                                    {% for i in range(7) %}
+                                    <td>
+                                        {% set cell_data = side_data.clear_details[i].get(camp_name) %}
+                                        {% if cell_data %}
+                                            <div class="camp-cell-content">
+                                                <span class="perc">{{ cell_data.percentage }}%</span><br>
+                                                <span class="time">{{ cell_data.avg_time }}</span>
+                                            </div>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p class="notice">No jungle clear data found for {{ side_name }} side with the selected filters.</p>
+            {% endif %}
+        {% endmacro %}
+
+        <div class="side-block blue-side">
+            <h3 class="side-header">Blue Side Patterns</h3>
+            {{ render_side(stats.blue_side, 'Blue') }}
+        </div>
+
+        <div class="side-block red-side">
+            <h3 class="side-header">Red Side Patterns</h3>
+            {{ render_side(stats.red_side, 'Red') }}
+        </div>
+
+    </div>
+{% endif %}
+
+{% endblock %}
