@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Swap Analysis{% endblock %}
+
+{% block content %}
+<style>
+    .swap-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+    .interval-block {
+        background-color: var(--bg-dark-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    .interval-header {
+        text-align: center;
+        font-size: 1.2rem;
+        font-family: monospace;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .role-charts-container {
+        display: flex;
+        gap: 2rem;
+        justify-content: space-around;
+    }
+    .role-chart {
+        flex: 1;
+        min-width: 0;
+    }
+    .role-chart h5 {
+        text-align: center;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        color: var(--text-secondary);
+    }
+    
+    .chart-area {
+        height: 200px;
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-end; 
+        gap: 6px; 
+        border-bottom: 2px solid var(--border-color);
+        padding: 0 5px;
+    }
+    .chart-bar-wrapper {
+        flex: 1 1 30px; 
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        text-align: center;
+        height: 100%;
+        max-width: 70px;
+    }
+    .bar-perc {
+        font-size: 0.8em;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 6px; 
+        height: 1.2em;
+    }
+    .chart-bar {
+        width: 90%;
+        background-color: #e74c3c;
+        transition: height 0.3s ease-out;
+        border-radius: 3px 3px 0 0;
+        min-height: 2px;
+    }
+    .chart-bar.high { background-color: #f1c40f; }
+    .chart-bar.very-high { background-color: var(--stat-positive); }
+
+    .bar-label {
+        font-size: 0.8em;
+        /* === ИЗМЕНЕНИЕ: Увеличен отступ сверху === */
+        margin-top: 8px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        height: 1.2em;
+        display: block;
+    }
+</style>
+
+<div class="header-controls">
+    <h1>Swap Analysis</h1>
+    <div class="controls">
+        <form method="get" class="filter-form" action="{{ url_for('swap') }}">
+            <div class="filter-group">
+                <label for="team_select">Team:</label>
+                <select name="team" id="team_select" onchange="this.form.submit()">
+                    <option value="">-- Select Team --</option>
+                    {% for team_display_name in all_teams %}
+                        <option value="{{ team_display_name }}" {% if team_display_name == selected_team %}selected{% endif %}>
+                            {{ team_display_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="champion_select">Champion:</label>
+                <select name="champion" id="champion_select" onchange="this.form.submit()">
+                    {% for champ in available_champions %}
+                        <option value="{{ champ }}" {% if champ == selected_champion %}selected{% endif %}>{{ champ }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="games_filter_select">Last Games:</label>
+                <select name="games_filter" id="games_filter_select" onchange="this.form.submit()">
+                    {% for gf in games_filters %}
+                        <option value="{{ gf }}" {% if gf == selected_games_filter %}selected{% endif %}>{{ gf }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <noscript><button type="submit" class="button">Apply Filter</button></noscript>
+        </form>
+    </div>
+</div>
+<hr>
+
+{% if stats.error %}
+    <p class="notice error-message">{{ stats.error }}</p>
+{% elif stats.message %}
+    <p class="notice">{{ stats.message }}</p>
+{% elif selected_team and stats.data %}
+    <div class="swap-container">
+        {% for interval, roles_data in stats.data.items() %}
+        <div class="interval-block">
+            <h3 class="interval-header">{{ interval }}</h3>
+            <div class="role-charts-container">
+                {% for role, zones in roles_data.items() %}
+                <div class="role-chart">
+                    <h5>{{ role }} Position</h5>
+                    <div class="chart-area">
+                        {% for zone_data in zones %}
+                        <div class="chart-bar-wrapper" title="{{ zone_data.zone }}: {{ "%.1f"|format(zone_data.percentage) }}%">
+                            <span class="bar-perc">{{ "%.0f"|format(zone_data.percentage) }}%</span>
+                            {% set perc = zone_data.percentage %}
+                            <div class="chart-bar {{ 'very-high' if perc > 50 else 'high' if perc > 25 else '' }}" style="height: {{ perc }}%;"></div>
+                            <span class="bar-label">{{ zone_data.zone }}</span>
+                        </div>
+                        {% endfor %}
+                         {% if not zones %}
+                            <p class="notice" style="font-size:0.8em; align-self: center; width: 100%;">No data</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% endblock %}

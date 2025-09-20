@@ -44,8 +44,9 @@ from soloq_logic import (
 )
 from start_positions_logic import get_start_positions_data
 from jng_clear_logic import get_jng_clear_data
-# <<< НОВЫЙ ИМПОРТ ДЛЯ OBJECTS
 from objects_logic import get_objects_data
+# <<< НОВЫЙ ИМПОРТ ДЛЯ SWAP
+from swap_logic import get_swap_data
 
 
 app = Flask(__name__)
@@ -142,7 +143,6 @@ def jng_clear():
         stats=stats
     )
 
-# <<< НОВЫЙ МАРШРУТ ДЛЯ OBJECTS ---
 @app.route('/objects')
 def objects():
     selected_team = request.args.get('team')
@@ -161,7 +161,6 @@ def objects():
         all_teams=all_teams,
         stats=stats
     )
-# --- КОНЕЦ НОВОГО МАРШРУТА ---
 
 @app.route('/wards')
 def wards():
@@ -358,6 +357,40 @@ def update_soloq_route():
         flash(f"SoloQ update completed with {update_errors} error(s). Check logs for details.", "warning")
 
     return redirect(request.referrer or url_for('soloq'))
+
+# <<< НОВЫЙ МАРШРУТ ДЛЯ SWAP ---
+@app.route('/swap')
+def swap():
+    selected_team = request.args.get('team')
+    selected_champion = request.args.get('champion', 'All')
+    games_filter = request.args.get('games_filter', '10')
+    games_filters = ["5", "10", "20", "All"]
+
+    all_teams, stats, available_champions = [], {}, []
+    try:
+        all_teams, stats, available_champions = get_swap_data(
+            selected_team_full_name=selected_team,
+            selected_champion=selected_champion,
+            games_filter=games_filter
+        )
+    except Exception as e:
+        log_message(f"Error in /swap data aggregation: {e}")
+        import traceback
+        log_message(traceback.format_exc())
+        flash(f"Error loading swap data: {e}", "error")
+        stats = {"error": "Failed to load swap data."}
+
+    return render_template(
+        'swap.html',
+        all_teams=all_teams,
+        selected_team=selected_team,
+        available_champions=available_champions,
+        selected_champion=selected_champion,
+        games_filters=games_filters,
+        selected_games_filter=games_filter,
+        stats=stats
+    )
+# --- КОНЕЦ НОВОГО МАРШРУТА ---
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002, debug=True)
