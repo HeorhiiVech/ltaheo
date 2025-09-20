@@ -14,8 +14,9 @@
         <nav class="sidebar">
             <a href="{{ url_for('index') }}" class="sidebar-brand">heovech</a>
             <ul class="sidebar-nav">
-                <li><a href="{{ url_for('tournament') }}" class="nav-link {% if request.endpoint == 'tournament' %}active{% endif %}">LTA Teams</a></li>
-                <li><a href="{{ url_for('jng_clear') }}" class="nav-link {% if request.endpoint == 'jng_clear' %}active{% endif %}">JNG Clear</a></li> {# <<< НОВАЯ ССЫЛКА #}
+                <li><a href="{{ url_for('tournament') }}" class="nav-link {% if request.endpoint == 'tournament' %}active{% endif %}">LTA South</a></li>
+                <li><a href="{{ url_for('jng_clear') }}" class="nav-link {% if request.endpoint == 'jng_clear' %}active{% endif %}">JNG Clear</a></li>
+                <li><a href="{{ url_for('objects') }}" class="nav-link {% if request.endpoint == 'objects' %}active{% endif %}">Objects</a></li> {# <<< НОВАЯ ССЫЛКА #}
                 <li><a href="{{ url_for('wards') }}" class="nav-link {% if request.endpoint == 'wards' %}active{% endif %}">Wards</a></li>
                 <li><a href="{{ url_for('proximity') }}" class="nav-link {% if request.endpoint == 'proximity' %}active{% endif %}">Proximity</a></li>
                 <li><a href="{{ url_for('start_positions') }}" class="nav-link {% if request.endpoint == 'start_positions' %}active{% endif %}">Start Positions</a></li>

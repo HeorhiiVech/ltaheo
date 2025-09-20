@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Objective Stats{% endblock %}
+
+{% block content %}
+<style>
+    /*
+    ============================================
+    --- Стили для страницы Objects (v3.8) ---
+    ============================================
+    */
+    .objects-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .main-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+    .stats-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .stat-block {
+        background-color: var(--bg-dark-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+    .stat-block h4 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .objective-content-wrapper {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+    .objective-stats-main {
+        flex-grow: 1;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.2rem 0.5rem;
+        text-align: center;
+        margin-bottom: 1.2rem;
+    }
+    .stat-item .label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .stat-item .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-headings);
+        font-family: monospace;
+        margin-left: 8px;
+    }
+    .stat-item .value.positive { color: var(--stat-positive); }
+    .stat-item .value.negative { color: var(--stat-negative); }
+    
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem 1.5rem;
+        text-align: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+    .details-grid .value {
+        font-size: 1.2rem;
+        margin-left: 8px;
+    }
+    
+    .grubs-wr-table { width: 100%; margin-top: 1.2rem; font-size: 0.9em; text-align: center; }
+    .grubs-wr-table th, .grubs-wr-table td { padding: 5px; border-bottom: 1px solid var(--border-color); }
+    .grubs-wr-table thead th { color: var(--text-secondary); font-size: 0.9em; }
+    .grubs-wr-table tr:last-child td { border-bottom: none; }
+    .grubs-wr-table .positive { color: var(--stat-positive); font-weight: 600; }
+    .grubs-wr-table .negative { color: var(--stat-negative); font-weight: 600; }
+    
+    .time-list-container { flex-shrink: 0; width: 150px; }
+    .time-list-container h5 { font-size: 0.8em; text-align: center; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;}
+    .time-list {
+        font-family: monospace; font-size: 0.9em; max-height: 150px; overflow-y: auto;
+        border: 1px solid var(--border-color); padding: 5px; background: var(--bg-dark-primary);
+        text-align: center; scrollbar-width: thin; scrollbar-color: var(--bg-dark-tertiary) var(--bg-dark-secondary);
+    }
+    
+    .ft-table-new {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9em;
+    }
+    .ft-table-new td {
+        padding: 8px 5px;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .ft-table-new tr:last-child td { border-bottom: none; }
+    .ft-table-new .label { font-weight: bold; color: var(--text-secondary); text-align: left; }
+    .ft-table-new .value {
+        font-weight: 600;
+        font-family: monospace;
+        font-size: 1.5em;
+    }
+    .ft-table-new .positive { color: var(--stat-positive); }
+    .ft-table-new .negative { color: var(--stat-negative); }
+    .ft-table-new .spacer-row td { padding: 4px; border-bottom: 2px solid var(--border-color); }
+    .ft-table-new .header-row td {
+        font-weight: bold;
+        color: var(--text-secondary);
+        font-size: 0.9em;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .ft-table-new .lane-label {
+        background-color: var(--bg-dark-tertiary);
+        border-right: 1px solid var(--border-color);
+    }
+
+</style>
+
+<div class="header-controls">
+    <h1>Objective Statistics</h1>
+    <div class="controls">
+        <form method="get" class="filter-form" action="{{ url_for('objects') }}">
+            <div class="filter-group">
+                <label for="team_select">Team:</label>
+                <select name="team" id="team_select" onchange="this.form.submit()">
+                    <option value="">-- Select Team --</option>
+                    {% for team_display_name in all_teams %}
+                        <option value="{{ team_display_name }}" {% if team_display_name == stats.selected_team_name %}selected{% endif %}>
+                            {{ team_display_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <noscript><button type="submit" class="button">Apply Filter</button></noscript>
+        </form>
+    </div>
+</div>
+<hr>
+
+{% if stats.error %}
+    <p class="notice error-message">{{ stats.error }}</p>
+{% elif stats.message %}
+    <p class="notice">{{ stats.message }}</p>
+{% elif stats.selected_team_name %}
+    
+    {% macro render_generic_objective(obj_stats, obj_name) %}
+        <div class="objective-content-wrapper">
+            <div class="objective-stats-main">
+                <div class="stat-grid">
+                    <div class="stat-item"><span class="label">{{ obj_name }} %</span><span class="value {{ 'positive' if obj_stats.percent >= 50 else 'negative' }}">{{ obj_stats.percent }}%</span></div>
+                    <div class="stat-item"><span class="label">Total Taken</span><span class="value">{{ obj_stats.total }}</span></div>
+                    <div class="stat-item"><span class="label">{{ obj_name }} WR%</span><span class="value {{ 'positive' if obj_stats.winrate >= 50 else 'negative' }}">{{ obj_stats.winrate }}%</span></div>
+                </div>
+                <div class="details-grid">
+                   <div class="stat-item"><span class="label">Avg. Timer</span><span class="value">{{ obj_stats.avg_time }}</span></div>
+                   <div class="stat-item"><span class="label">Min. Timer</span><span class="value">{{ obj_stats.min_time }}</span></div>
+                   <div class="stat-item"><span class="label">Max. Timer</span><span class="value">{{ obj_stats.max_time }}</span></div>
+                </div>
+            </div>
+            <div class="time-list-container">
+                <h5>{{ obj_name }} Times</h5>
+                <div class="time-list">{% for time in obj_stats.start_times %}{{ time }}<br>{% endfor %}</div>
+            </div>
+        </div>
+    {% endmacro %}
+
+    {% macro render_stats_section(data, side_name) %}
+        {% if data and data.total_games %}
+        <div class="objects-container">
+            <h2 style="text-align: center; text-transform: uppercase;">{{ side_name }} Side Stats ({{ data.total_games }} Games)</h2>
+            
+            <div class="main-stats-grid">
+                <div class="stats-column">
+                    <div class="stat-block">
+                        <h4>Drakes</h4>
+                        {% set drake_stats = data.drakes %}
+                        <div class="objective-content-wrapper">
+                            <div class="objective-stats-main">
+                                <div class="stat-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 1rem;">
+                                    {% for i in range(1, 5) %}
+                                        {% set take_rate = drake_stats.take_rate.get(i, 0) %}
+                                        <div class="stat-item"><span class="label">{{ i }}{{ 'st' if i==1 else 'nd' if i==2 else 'rd' if i==3 else 'th' }} Drake %</span><span class="value {{ 'positive' if take_rate >= 50 else 'negative' }}">{{ take_rate }}%</span></div>
+                                    {% endfor %}
+                                </div>
+                                <div class="stat-grid" style="padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                    <div class="stat-item"><span class="label">Avg. Drakes @7m</span><span class="value">{{ "%.2f"|format(drake_stats.avg_drakes_at_7min) }}</span></div>
+                                    <div class="stat-item"><span class="label">Avg. Drakes @15m</span><span class="value">{{ "%.2f"|format(drake_stats.avg_drakes_at_15min) }}</span></div>
+                                    <div class="stat-item"><span class="label">Avg. Drakes/Game</span><span class="value">{{ "%.2f"|format(drake_stats.avg_drakes_per_game) }}</span></div>
+                                    <div class="stat-item"><span class="label">Soul %</span><span class="value {{ 'positive' if drake_stats.soul_percent >= 50 else 'negative' }}">{{ drake_stats.soul_percent }}%</span></div>
+                                    <div class="stat-item" style="grid-column: span 2;"><span class="label">Soul WR%</span><span class="value {{ 'positive' if drake_stats.soul_wr_percent >= 50 else 'negative' }}">{{ drake_stats.soul_wr_percent }}%</span></div>
+                                </div>
+                                <div class="details-grid">
+                                    <div class="stat-item"><span class="label">Avg. 1st Drake</span><span class="value">{{ drake_stats.avg_first_drake_timer }}</span></div>
+                                    <div class="stat-item"><span class="label">Min. 1st Drake</span><span class="value">{{ drake_stats.min_first_drake_timer }}</span></div>
+                                    <div class="stat-item"><span class="label">Max. 1st Drake</span><span class="value">{{ drake_stats.max_first_drake_timer }}</span></div>
+                                </div>
+                            </div>
+                            <div class="time-list-container">
+                                <h5>1st Drake Times</h5>
+                                <div class="time-list">
+                                    {% for time in drake_stats.all_first_drake_timers %}{{ time }}<br>{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-block">
+                         <h4>Baron Nashor</h4>
+                         {{ render_generic_objective(data.barons, '1st Baron') }}
+                    </div>
+                     <div class="stat-block">
+                         <h4>Atakhan</h4>
+                         {{ render_generic_objective(data.atakhan, 'Atakhan') }}
+                    </div>
+                </div>
+
+                <div class="stats-column">
+                    <div class="stat-block">
+                         <h4>Voidgrubs</h4>
+                         {% set grub_stats = data.voidgrubs %}
+                         <div class="objective-content-wrapper">
+                            <div class="objective-stats-main">
+                                 <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                                     <div class="stat-item"><span class="label">1+ Grubs %</span><span class="value {{ 'positive' if grub_stats.first_grub_stats.one_plus_rate >= 50 else 'negative' }}">{{ grub_stats.first_grub_stats.one_plus_rate }}%</span></div>
+                                     <div class="stat-item"><span class="label">3+ Grubs %</span><span class="value {{ 'positive' if grub_stats.first_grub_stats.three_plus_rate >= 50 else 'negative' }}">{{ grub_stats.first_grub_stats.three_plus_rate }}%</span></div>
+                                     <div class="stat-item"><span class="label">Avg. Grubs Taken</span><span class="value">{{ grub_stats.first_grub_stats.avg_taken }}</span></div>
+                                     <div class="stat-item"><span class="label">Avg. 1st Grub Time</span><span class="value">{{ grub_stats.first_grub_stats.avg_time }}</span></div>
+                                 </div>
+                                 <table class="grubs-wr-table"><thead><tr><th>Grubs Taken</th><th>Games</th><th>WR%</th><th>Diff WR</th></tr></thead>
+                                    <tbody>
+                                    {% for item in grub_stats.wr_by_grubs %}
+                                        <tr>
+                                            <td>{{ item.grubs_count }}{% if item.grubs_count == 3 %}+{% endif %}</td>
+                                            <td>{{ item.games }}</td>
+                                            <td class="{{'positive' if item.winrate >= 50 else 'negative'}}">{{ "%.2f"|format(item.winrate) }}%</td>
+                                            <td class="{{'positive' if item.diff_wr.startswith('+') else 'negative'}}">{{ item.diff_wr }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                 </table>
+                            </div>
+                            <div class="time-list-container">
+                                <h5>1st Grub Times</h5>
+                                <div class="time-list">{% for time in grub_stats.first_grub_stats.start_times %}{{ time }}<br>{% endfor %}</div>
+                            </div>
+                         </div>
+                    </div>
+
+                    <div class="stat-block">
+                         <h4>Rift Herald</h4>
+                         {{ render_generic_objective(data.heralds, 'Herald') }}
+                    </div>
+
+                    <div class="stat-block">
+                        <h4>Tower Stats</h4>
+                        {% set ft = data.first_tower %}
+                        <table class="ft-table-new">
+                            <tbody>
+                                <tr>
+                                    <td class="label">Avg. FT %</td>
+                                    <td class="value {{ 'positive' if ft.avg_ft_percent >= 50 else 'negative' }}">{{ ft.avg_ft_percent }}%</td>
+                                    <td class="label">Avg. FT Timer</td>
+                                    <td class="value">{{ ft.avg_ft_timer }}</td>
+                                    <td class="label">Avg. T1 Outers First</td>
+                                    <td class="value">{{ ft.avg_ft_timer }}</td>
+                                </tr>
+                                
+                                <tr class="spacer-row"><td colspan="6"></td></tr>
+                                
+                                <tr class="header-row">
+                                    <td></td>
+                                    <td>FT %</td>
+                                    <td>FT Timer</td>
+                                    <td>T1 Destroyed</td>
+                                    <td>T1 Lost</td>
+                                    <td>Diff</td>
+                                </tr>
+                                
+                                {% for lane in ['TOP', 'MID', 'BOT'] %}
+                                <tr>
+                                    <td class="label lane-label">{{ lane }}</td>
+                                    <td class="value {{ 'positive' if ft.by_lane[lane].ft_percent >= 50 else 'negative' }}">{{ ft.by_lane[lane].ft_percent }}%</td>
+                                    <td class="value">{{ ft.by_lane[lane].ft_timer }}</td>
+                                    <td class="value">{{ ft.by_lane[lane].t1_our_avg }}</td>
+                                    <td class="value">{{ ft.by_lane[lane].t1_enemy_avg }}</td>
+                                    <td class="value {{ 'positive' if ft.by_lane[lane].t1_diff.startswith('-') else 'negative' if ft.by_lane[lane].t1_diff.startswith('+') else '' }}">
+                                        {{ ft.by_lane[lane].t1_diff }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endmacro %}
+    
+    <div class="objects-container">
+        {{ render_stats_section(stats.overall, 'Overall') }}
+        {% if stats.blue_side and stats.blue_side.total_games > 0 and stats.red_side and stats.red_side.total_games > 0 %} <hr> {% endif %}
+        {{ render_stats_section(stats.blue_side, 'Blue') }}
+        {% if stats.blue_side and stats.blue_side.total_games > 0 and stats.red_side and stats.red_side.total_games > 0 %} <hr> {% endif %}
+        {{ render_stats_section(stats.red_side, 'Red') }}
+    </div>
+
+{% endif %}
+
+{% endblock %}

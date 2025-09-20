@@ -42,10 +42,10 @@ from soloq_logic import (
     fetch_and_store_soloq_data,
     get_soloq_activity_data
 )
-# <<< НОВЫЙ ИМПОРТ
 from start_positions_logic import get_start_positions_data
-# <<< НОВЫЙ ИМПОРТ ДЛЯ JNG CLEAR
 from jng_clear_logic import get_jng_clear_data
+# <<< НОВЫЙ ИМПОРТ ДЛЯ OBJECTS
+from objects_logic import get_objects_data
 
 
 app = Flask(__name__)
@@ -62,7 +62,6 @@ def inject_now():
 def inject_utility_processor():
     champ_data = get_champion_data()
     team_tag_map = TEAM_TAG_TO_FULL_NAME
-    # Добавляем get_latest_patch_version в контекст для JS
     return dict(
         get_champion_icon_html=get_champion_icon_html,
         champion_data=champ_data,
@@ -116,7 +115,6 @@ def update_hll_route():
     elif added_games == 0: flash(f"No new games found or updated for {tournament_name_for_flash}.", "info")
     return redirect(request.referrer or url_for('tournament'))
 
-# <<< НОВЫЙ МАРШРУТ ДЛЯ JNG CLEAR ---
 @app.route('/jng_clear')
 def jng_clear():
     selected_team = request.args.get('team')
@@ -141,6 +139,26 @@ def jng_clear():
         selected_team=selected_team,
         available_champions=available_champions,
         selected_champion=selected_champion,
+        stats=stats
+    )
+
+# <<< НОВЫЙ МАРШРУТ ДЛЯ OBJECTS ---
+@app.route('/objects')
+def objects():
+    selected_team = request.args.get('team')
+    all_teams, stats = [], {}
+    try:
+        all_teams, stats = get_objects_data(selected_team_full_name=selected_team)
+    except Exception as e:
+        log_message(f"Error in /objects data aggregation: {e}")
+        import traceback
+        log_message(traceback.format_exc())
+        flash(f"Error loading object data: {e}", "error")
+        stats = {"error": "Failed to load object data."}
+    
+    return render_template(
+        'objects.html',
+        all_teams=all_teams,
         stats=stats
     )
 # --- КОНЕЦ НОВОГО МАРШРУТА ---

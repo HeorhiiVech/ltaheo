@@ -214,7 +214,6 @@ def init_db():
         except sqlite3.Error as e:
             print(f"Ошибка при создании таблицы/индексов 'first_wards_data': {e}")
         
-        # --- НОВАЯ ТАБЛИЦА ДЛЯ ВСЕХ ВАРДОВ ---
         print("Проверка/создание таблицы all_wards_data...")
         create_all_wards_sql = """
         CREATE TABLE IF NOT EXISTS all_wards_data (
@@ -231,7 +230,6 @@ def init_db():
             last_updated TEXT NOT NULL
         );
         """
-        # Индексы для ускорения фильтрации
         create_all_wards_game_id_index_sql = "CREATE INDEX IF NOT EXISTS idx_all_wards_data_game_id ON all_wards_data (game_id);"
         create_all_wards_puuid_index_sql = "CREATE INDEX IF NOT EXISTS idx_all_wards_data_player_puuid ON all_wards_data (player_puuid);"
         create_all_wards_timestamp_index_sql = "CREATE INDEX IF NOT EXISTS idx_all_wards_data_timestamp ON all_wards_data (timestamp_seconds);"
@@ -243,9 +241,7 @@ def init_db():
             print("Таблица 'all_wards_data' и индексы успешно проверены/созданы.")
         except sqlite3.Error as e:
             print(f"Ошибка при создании таблицы/индексов 'all_wards_data': {e}")
-        # --- КОНЕЦ НОВОЙ ТАБЛИЦЫ ---
 
-        # --- НОВАЯ ТАБЛИЦА ДЛЯ PROXIMITY ---
         print("Проверка/создание таблицы player_positions_timeline...")
         create_positions_timeline_sql = """
         CREATE TABLE IF NOT EXISTS player_positions_timeline (
@@ -259,7 +255,6 @@ def init_db():
             last_updated TEXT NOT NULL
         );
         """
-        # Индексы для ускорения выборок по игре и времени
         create_timeline_game_id_index_sql = "CREATE INDEX IF NOT EXISTS idx_timeline_game_id ON player_positions_timeline (game_id);"
         create_timeline_timestamp_index_sql = "CREATE INDEX IF NOT EXISTS idx_timeline_timestamp ON player_positions_timeline (timestamp_ms);"
         create_timeline_game_puuid_index_sql = "CREATE INDEX IF NOT EXISTS idx_timeline_game_puuid ON player_positions_timeline (game_id, player_puuid);"
@@ -271,7 +266,31 @@ def init_db():
             print("Таблица 'player_positions_timeline' и индексы успешно проверены/созданы.")
         except sqlite3.Error as e:
             print(f"Ошибка при создании таблицы/индексов 'player_positions_timeline': {e}")
-        # --- КОНЕЦ НОВОЙ ТАБЛИЦЫ ---
+            
+        # <<< НОВАЯ ТАБЛИЦА ДЛЯ ОБЪЕКТОВ >>>
+        print("Проверка/создание таблицы objective_events...")
+        create_objectives_sql = """
+        CREATE TABLE IF NOT EXISTS objective_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_id TEXT NOT NULL,
+            timestamp_ms INTEGER NOT NULL,
+            objective_type TEXT NOT NULL,     -- 'DRAGON', 'BARON', 'HERALD', 'TOWER', 'VOIDGRUB'
+            objective_subtype TEXT,           -- 'FIRE', 'WATER', 'OUTER', 'INNER' etc.
+            team_id INTEGER,                  -- 100 for Blue, 200 for Red
+            killer_participant_id INTEGER,
+            lane TEXT                         -- 'TOP_LANE', 'MID_LANE', 'BOT_LANE' for towers
+        );
+        """
+        # Индексы для ускорения выборок
+        create_objectives_game_id_index = "CREATE INDEX IF NOT EXISTS idx_objectives_game_id ON objective_events (game_id);"
+        create_objectives_type_index = "CREATE INDEX IF NOT EXISTS idx_objectives_type ON objective_events (objective_type);"
+        try:
+            cursor.execute(create_objectives_sql)
+            cursor.execute(create_objectives_game_id_index)
+            cursor.execute(create_objectives_type_index)
+            print("Таблица 'objective_events' и индексы успешно проверены/созданы.")
+        except sqlite3.Error as e:
+            print(f"Ошибка при создании таблицы/индексов 'objective_events': {e}")
 
         conn.commit()
     except sqlite3.Error as e:
@@ -279,6 +298,7 @@ def init_db():
         conn.rollback()
     finally:
         conn.close()
+
 
 if __name__ == '__main__':
     print(f"!!! ВНИМАНИЕ: Обновлена схема таблицы 'tournament_games' (добавлены PUUID/PartID).")
