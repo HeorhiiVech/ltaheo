@@ -35,7 +35,7 @@ from scrims_logic import (
 from database import get_db_connection, TOURNAMENT_GAMES_HEADER
 
 # --- Constants ---
-TARGET_TOURNAMENT_ID = "826828"
+TARGET_TOURNAMENT_ID = "827201"
 TARGET_TOURNAMENT_NAME_FOR_DB = "HLL Split 3"
 MATCH_START_DATE_FILTER = "2025-04-03T00:00:00Z"
 TEAM_TAG_TO_FULL_NAME = {
